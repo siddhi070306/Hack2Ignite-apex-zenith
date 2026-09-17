@@ -38,4 +38,26 @@ async function getRagAdvice({ text, urgency }) {
   }
 }
 
-module.exports = { getRagAdvice };
+async function getEducationContent(docId) {
+  const ragUrl = process.env.RAG_SERVICE_URL;
+  if (!ragUrl) return null;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), RAG_TIMEOUT_MS);
+
+    const response = await fetch(`${ragUrl}/rag/topic/${encodeURIComponent(docId)}`, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.found) return null;
+
+    return { docId: data.docId, sections: data.sections || [] };
+  } catch (err) {
+    console.warn('RAG service unreachable or timed out fetching education content:', err.message);
+    return null;
+  }
+}
+
+module.exports = { getRagAdvice, getEducationContent };

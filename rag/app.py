@@ -186,6 +186,23 @@ def get_advice(req: AdviceRequest):
     return AdviceResponse(source="none")
 
 
+@app.get("/rag/topic/{doc_id}")
+def get_topic(doc_id: str):
+    """Serves the full corpus content for one document — the education-content feature
+    reads this to show fuller "what to expect / home care" guidance for whichever topic
+    grounded the triage advice. No LLM call: this is just the retrieval-verified source
+    material itself, so there's nothing to hallucinate."""
+    _, chunks = get_index()
+    doc_chunks = [c for c in chunks if c["doc_id"] == doc_id]
+    if not doc_chunks:
+        return {"found": False, "docId": doc_id, "sections": []}
+    return {
+        "found": True,
+        "docId": doc_id,
+        "sections": [{"title": c["title"], "text": c["text"]} for c in doc_chunks],
+    }
+
+
 @app.get("/health")
 def health():
     try:

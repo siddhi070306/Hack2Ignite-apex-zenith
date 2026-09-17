@@ -10,8 +10,8 @@ const User = require('./models/User');
 const Patient = require('./models/Patient');
 const Triage = require('./models/Triage');
 const { analyzeSpokenTriage } = require('./llm/openrouter');
-const { getRagAdvice } = require('./llm/rag');
-const { speechToText, textToSpeech, translateToEnglish } = require('./llm/sarvam');
+const { getRagAdvice, getEducationContent } = require('./llm/rag');
+const { speechToText, textToSpeech, translate: sarvamTranslate } = require('./llm/sarvam');
 const { record: recordMetric, getAllStats } = require('./metrics');
 
 const app = express();
@@ -660,14 +660,14 @@ app.post('/api/text-to-speech', async (req, res) => {
   }
 });
 
-// POST /api/translate - Sarvam AI translation proxy (Hindi/Marathi -> English)
+// POST /api/translate - Sarvam AI translation proxy (defaults to *->English, or pass targetLanguageCode)
 app.post('/api/translate', async (req, res) => {
   try {
-    const { text, sourceLanguageCode } = req.body;
+    const { text, sourceLanguageCode, targetLanguageCode } = req.body;
     if (!text) {
       return res.status(400).json({ error: 'Text payload is required.' });
     }
-    const result = await translateToEnglish({ text, sourceLanguageCode });
+    const result = await sarvamTranslate({ text, sourceLanguageCode, targetLanguageCode: targetLanguageCode || 'en-IN' });
     if (result.error) {
       return res.status(400).json(result);
     }
@@ -796,6 +796,20 @@ app.post('/api/analyze-triage', async (req, res) => {
   } catch (error) {
     console.error('Speech Triage Analysis Error:', error);
     res.status(500).json({ error: 'Internal triage analysis error' });
+  }
+});
+
+// GET /api/education/:docId - fuller corpus content for the topic that grounded some advice
+app.get('/api/education/:docId', async (req, res) => {
+  try {
+    const content = await getEducationContent(req.params.docId);
+    if (!content) {
+      return res.status(404).json({ error: 'Education content not available.' });
+    }
+    return res.json(content);
+  } catch (error) {
+    console.error('Education Content Error:', error);
+    res.status(500).json({ error: 'Failed to fetch education content' });
   }
 });
 

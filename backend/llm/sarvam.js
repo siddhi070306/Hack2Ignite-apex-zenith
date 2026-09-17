@@ -77,8 +77,9 @@ async function textToSpeech({ text, languageCode }) {
   return { audioBase64, mimeType: 'audio/wav' };
 }
 
-// Translates text (e.g. Hindi/Marathi) into English via Sarvam's translate endpoint.
-async function translateToEnglish({ text, sourceLanguageCode }) {
+// Translates text between two languages via Sarvam's translate endpoint. Defaults preserve
+// the original hi/mr -> en behavior other callers rely on.
+async function translate({ text, sourceLanguageCode, targetLanguageCode }) {
   const apiKey = process.env.SARVAM_API_KEY;
   if (!apiKey) {
     return { error: 'Sarvam API key is not configured.', fallback: true };
@@ -86,19 +87,28 @@ async function translateToEnglish({ text, sourceLanguageCode }) {
 
   let srcLang = sourceLanguageCode || 'hi-IN';
   if (!srcLang.includes('-')) srcLang = `${srcLang}-IN`;
-  if (srcLang === 'en-IN') return { translatedText: text };
+  let tgtLang = targetLanguageCode || 'en-IN';
+  if (!tgtLang.includes('-')) tgtLang = `${tgtLang}-IN`;
+
+  if (srcLang === tgtLang) return { translatedText: text, sourceLanguageCode: srcLang, targetLanguageCode: tgtLang };
 
   const response = await fetch(SARVAM_TRANSLATE_URL, {
     method: 'POST',
     headers: { 'api-subscription-key': apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ input: text, source_language_code: srcLang, target_language_code: 'en-IN', mode: 'formal' })
+    body: JSON.stringify({ input: text, source_language_code: srcLang, target_language_code: tgtLang, mode: 'formal' })
   });
 
   const data = await response.json();
   if (!response.ok) {
     return { error: 'Translation failed', fallback: true };
   }
-  return { translatedText: data.translated_text || text, sourceLanguageCode: srcLang };
+  return { translatedText: data.translated_text || text, sourceLanguageCode: srcLang, targetLanguageCode: tgtLang };
 }
 
-module.exports = { speechToText, textToSpeech, translateToEnglish };
+// Translates text (e.g. Hindi/Marathi) into English — thin wrapper over translate() kept
+// for backward compatibility with existing callers.
+async function translateToEnglish({ text, sourceLanguageCode }) {
+  return translate({ text, sourceLanguageCode, targetLanguageCode: 'en-IN' });
+}
+
+module.exports = { speechToText, textToSpeech, translate, translateToEnglish };
