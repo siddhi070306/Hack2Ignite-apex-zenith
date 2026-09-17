@@ -4,7 +4,7 @@ AI-powered voice triage assistant for ASHA/ANM health workers in rural India —
 
 ## Features
 
-- **Voice triage**: record symptoms by voice (Hindi/Marathi/English UI, extendable to more languages), live browser transcription with a Sarvam AI (Saaras) speech-to-text fallback for full accuracy.
+- **Voice triage**: record symptoms by voice (Hindi/Marathi/English UI, extendable to more languages), live browser transcription with a Sarvam AI (Saaras) speech-to-text cross-check when the live transcript looks unstable or too short. A lightweight browser-only VAD auto-stops the recording after ~2.2s of sustained silence (manual stop always works too).
 - **AI urgency classification**: OpenRouter LLM (default `google/gemini-2.5-flash`) extracts symptoms/keywords and assigns a Red/Yellow/Green urgency tier, with a deterministic rule-based fallback when no API key is configured.
 - **Spoken advice playback**: triage advice can be read aloud via Sarvam AI's Bulbul text-to-speech.
 - **Hospital/clinic locator**: live nearby facility search (OpenStreetMap Overpass + Nominatim) on a Leaflet map, auto-surfaced for Red-urgency cases.
@@ -12,6 +12,7 @@ AI-powered voice triage assistant for ASHA/ANM health workers in rural India —
 - **Doctor verification workflow**: doctors review AI-extracted triage records, adjust urgency/symptoms, and send a message back to the ASHA worker.
 - **Grounded advice (RAG)**: an optional Python service (`rag/`) always tries to answer, but labels how — `rag` (grounded in the corpus, with citations) or `llm` (no corpus match, general knowledge, clearly flagged as such in the UI). Retrieval is a lightweight, dependency-light TF-IDF match (no torch/embeddings) so the whole service stays well under Vercel's Python function size limit. See `rag/corpus/README.md` for the corpus's current status (starter/public-knowledge, not yet clinically reviewed).
 - **Offline-first**: works without MongoDB (falls back to local JSON files) and caches data in the browser for offline login/patient/triage access.
+- **Voice pipeline observability & eval**: `GET /api/metrics/voice` reports rolling p50/p95 latency for STT, TTS, analysis, and RAG lookup (analysis and RAG run concurrently, not sequentially). `backend/eval/voice_eval.js` is a small eval harness — a text-only golden set (always runs, no keys) proving the analyzer tolerates noisy/disfluent transcripts, plus a reverse-ASR TTS pronunciation check (needs `SARVAM_API_KEY` to mean anything, reports "skipped" otherwise).
 
 ## Structure
 
@@ -38,6 +39,8 @@ cd frontend && npm run dev
 ```
 
 The backend works with no API keys configured — MongoDB falls back to local JSON files, the LLM falls back to a rule-based clinical analyzer, and voice input falls back to the browser's built-in speech recognition. Add `SARVAM_API_KEY` and `OPENROUTER_API_KEY` in `backend/.env` for the full cloud-quality experience.
+
+Run the voice pipeline eval anytime with `node backend/eval/voice_eval.js` (no server needs to be running).
 
 ### Optional: RAG service (grounded advice)
 
