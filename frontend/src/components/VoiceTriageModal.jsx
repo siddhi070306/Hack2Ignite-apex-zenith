@@ -75,6 +75,9 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   const [advice, setAdvice] = useState('');
   const [groundedSources, setGroundedSources] = useState([]);
   const [adviceSource, setAdviceSource] = useState(null); // 'rag' | 'llm' | null
+  const [educationContent, setEducationContent] = useState(null); // null = not fetched yet
+  const [educationLoading, setEducationLoading] = useState(false);
+  const [educationExpanded, setEducationExpanded] = useState(false);
 
   const [inputMode, setInputMode] = useState('voice');
   const [manualText, setManualText] = useState('');
@@ -200,6 +203,9 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
       setFollowUpDate('');
       setGroundedSources([]);
       setAdviceSource(null);
+      setEducationContent(null);
+      setEducationLoading(false);
+      setEducationExpanded(false);
       setSttProvider('');
       isRecordingRef.current = false;
       stopVad();
@@ -484,6 +490,8 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     setAdvice(result.advice || '');
     setGroundedSources(result.groundedSources || []);
     setAdviceSource(result.adviceSource || null);
+    setEducationContent(null);
+    setEducationExpanded(false);
     setTranslation(result.translation || textToAnalyze);
     setEditableSymptoms(result.symptoms || []);
     setVerificationStep(false);
@@ -505,6 +513,53 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triageStep, urgency]);
+
+  const handleLearnMore = async () => {
+    if (educationExpanded) {
+      setEducationExpanded(false);
+      return;
+    }
+    setEducationExpanded(true);
+    if (educationContent || groundedSources.length === 0) return;
+
+    setEducationLoading(true);
+    try {
+      const docId = groundedSources[0].docId;
+      const res = await fetch(`${API_BASE_URL}/api/education/${encodeURIComponent(docId)}`);
+      const data = await res.json();
+      if (!res.ok || !data.sections) {
+        setEducationContent([]);
+        return;
+      }
+
+      let sections = data.sections;
+      if (selectedLanguage !== 'en') {
+        const selectedLangObj = INDIAN_LANGUAGES.find(l => l.code === selectedLanguage);
+        const targetCode = selectedLangObj ? selectedLangObj.sarvamCode : null;
+        if (targetCode) {
+          sections = await Promise.all(sections.map(async (section) => {
+            try {
+              const tRes = await fetch(`${API_BASE_URL}/api/translate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: section.text, sourceLanguageCode: 'en-IN', targetLanguageCode: targetCode })
+              });
+              const tData = await tRes.json();
+              return tRes.ok && tData.translatedText ? { ...section, text: tData.translatedText } : section;
+            } catch (e) {
+              return section; // translation failure just falls back to English for that section
+            }
+          }));
+        }
+      }
+      setEducationContent(sections);
+    } catch (err) {
+      console.warn('Education content unavailable:', err);
+      setEducationContent([]);
+    } finally {
+      setEducationLoading(false);
+    }
+  };
 
   const handlePlayAdvice = async () => {
     if (ttsState === 'loading') return;
@@ -832,12 +887,37 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
                     </button>
                   </div>
                   {groundedSources.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {groundedSources.map((src, idx) => (
-                        <span key={idx} className="px-2 py-0.5 rounded-md bg-white/70 border border-current/20 text-[10px] font-semibold opacity-70">
-                          📖 {t('source_label')}: {src.title}
-                        </span>
-                      ))}
+                    <div className="mt-2 space-y-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {groundedSources.map((src, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded-md bg-white/70 border border-current/20 text-[10px] font-semibold opacity-70">
+                            📖 {t('source_label')}: {src.title}
+                          </span>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleLearnMore}
+                        className="text-[11px] font-bold underline decoration-dotted underline-offset-2 opacity-80 hover:opacity-100"
+                      >
+                        {educationExpanded ? t('show_less') : t('learn_more')}
+                      </button>
+                      {educationExpanded && (
+                        <div className="bg-white/60 border border-current/20 rounded-xl p-3 space-y-2 max-h-56 overflow-y-auto">
+                          {educationLoading ? (
+                            <div className="flex items-center gap-2 text-xs opacity-70"><Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('loading')}</div>
+                          ) : educationContent && educationContent.length > 0 ? (
+                            educationContent.map((section, idx) => (
+                              <div key={idx}>
+                                <h6 className="text-[11px] font-extrabold uppercase tracking-wide opacity-70">{section.title}</h6>
+                                <p className="text-xs leading-relaxed">{section.text}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-xs opacity-60">{t('no_education_content')}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ) : adviceSource === 'llm' && (
                     <div className="mt-2">

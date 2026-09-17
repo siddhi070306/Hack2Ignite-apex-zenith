@@ -155,6 +155,9 @@ export const translations = {
     followups_due: 'Follow-ups Due',
     no_followups_due: 'No follow-ups due right now.',
     mark_done: 'Mark Done',
+    learn_more: 'Learn More',
+    show_less: 'Show Less',
+    no_education_content: 'No additional guidance available for this topic.',
   },
   hi: {
     app_title: 'आशा साथी',
@@ -309,6 +312,9 @@ export const translations = {
     followups_due: 'लंबित फॉलो-अप',
     no_followups_due: 'अभी कोई फॉलो-अप लंबित नहीं है।',
     mark_done: 'पूर्ण चिह्नित करें',
+    learn_more: 'और जानें',
+    show_less: 'कम दिखाएं',
+    no_education_content: 'इस विषय पर कोई अतिरिक्त जानकारी उपलब्ध नहीं है।',
   },
   mr: {
     app_title: 'आशा साथी',
@@ -463,5 +469,8 @@ export const translations = {
     followups_due: 'प्रलंबित पाठपुरावा',
     no_followups_due: 'सध्या कोणताही पाठपुरावा प्रलंबित नाही.',
     mark_done: 'पूर्ण म्हणून चिन्हांकित करा',
+    learn_more: 'अधिक जाणून घ्या',
+    show_less: 'कमी दाखवा',
+    no_education_content: 'या विषयावर अतिरिक्त माहिती उपलब्ध नाही.',
   },
 };
