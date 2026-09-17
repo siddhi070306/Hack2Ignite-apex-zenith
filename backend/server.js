@@ -10,6 +10,7 @@ const User = require('./models/User');
 const Patient = require('./models/Patient');
 const Triage = require('./models/Triage');
 const { analyzeSpokenTriage } = require('./llm/openrouter');
+const { speechToText, textToSpeech, translateToEnglish } = require('./llm/sarvam');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -588,6 +589,79 @@ app.post('/api/triage', async (req, res) => {
   } catch (error) {
     console.error('Create Triage Error:', error);
     res.status(500).json({ error: 'Failed to create triage record' });
+  }
+});
+
+// POST /api/speech-to-text - Sarvam AI speech-to-text proxy
+app.post('/api/speech-to-text', async (req, res) => {
+  try {
+    const { audio, languageCode } = req.body;
+    if (!audio) {
+      return res.status(400).json({ error: 'Audio payload is required.' });
+    }
+
+    let base64Data = audio;
+    let mimeType = 'audio/webm';
+    let filename = 'audio.webm';
+
+    if (typeof audio === 'string' && audio.includes(',')) {
+      const parts = audio.split(',');
+      base64Data = parts[1];
+      const mimeMatch = parts[0].match(/data:([^;]+);/);
+      if (mimeMatch) {
+        mimeType = mimeMatch[1].split(';')[0];
+        if (mimeType.includes('mp4') || mimeType.includes('m4a')) filename = 'audio.mp4';
+        else if (mimeType.includes('wav')) filename = 'audio.wav';
+        else if (mimeType.includes('ogg')) filename = 'audio.ogg';
+        else if (mimeType.includes('mp3')) filename = 'audio.mp3';
+      }
+    }
+
+    const buffer = Buffer.from(base64Data, 'base64');
+    const result = await speechToText({ buffer, mimeType, filename, languageCode });
+    if (result.error) {
+      return res.status(result.status || 400).json(result);
+    }
+    return res.json(result);
+  } catch (error) {
+    console.error('Speech-to-Text Error:', error);
+    res.status(500).json({ error: 'Internal speech-to-text error', fallback: true });
+  }
+});
+
+// POST /api/text-to-speech - Sarvam AI (Bulbul) text-to-speech proxy
+app.post('/api/text-to-speech', async (req, res) => {
+  try {
+    const { text, languageCode } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: 'Text payload is required.' });
+    }
+    const result = await textToSpeech({ text, languageCode });
+    if (result.error) {
+      return res.status(result.status || 400).json(result);
+    }
+    return res.json(result);
+  } catch (error) {
+    console.error('Text-to-Speech Error:', error);
+    res.status(500).json({ error: 'Internal text-to-speech error' });
+  }
+});
+
+// POST /api/translate - Sarvam AI translation proxy (Hindi/Marathi -> English)
+app.post('/api/translate', async (req, res) => {
+  try {
+    const { text, sourceLanguageCode } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: 'Text payload is required.' });
+    }
+    const result = await translateToEnglish({ text, sourceLanguageCode });
+    if (result.error) {
+      return res.status(400).json(result);
+    }
+    return res.json(result);
+  } catch (error) {
+    console.error('Translation Error:', error);
+    res.status(500).json({ error: 'Internal translation error', fallback: true });
   }
 });
 
