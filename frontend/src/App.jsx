@@ -4,6 +4,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Patients from './components/Patients';
 import AddPatient from './components/AddPatient';
+import VoiceTriageModal from './components/VoiceTriageModal';
 import { useLanguage } from './context/LanguageContext';
 import { API_BASE_URL } from './config';
 
@@ -28,6 +29,12 @@ function App() {
     const saved = localStorage.getItem('asha_patients');
     return saved ? JSON.parse(saved) : [];
   });
+  const [triageHistory, setTriageHistory] = useState(() => {
+    const saved = localStorage.getItem('asha_triage_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [isTriageModalOpen, setIsTriageModalOpen] = useState(false);
+  const [triagePatient, setTriagePatient] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -37,6 +44,18 @@ function App() {
         if (Array.isArray(data)) {
           setPatients(data);
           localStorage.setItem('asha_patients', JSON.stringify(data));
+        }
+      })
+      .catch(() => {
+        // Backend unreachable — keep whatever is cached locally
+      });
+
+    fetch(`${API_BASE_URL}/api/triage`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setTriageHistory(data);
+          localStorage.setItem('asha_triage_history', JSON.stringify(data));
         }
       })
       .catch(() => {
@@ -73,8 +92,32 @@ function App() {
     if (andStartTriage) handleStartTriage(savedPatient);
   };
 
-  const handleStartTriage = () => {
-    showToast('Voice triage is coming in a future update.');
+  const handleStartTriage = (patientOrNull) => {
+    setTriagePatient(patientOrNull);
+    setIsTriageModalOpen(true);
+  };
+
+  const handleSaveTriage = async (triageData) => {
+    let savedRecord;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/triage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(triageData),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to save triage record');
+      savedRecord = data;
+    } catch (err) {
+      savedRecord = { id: 'local-' + Date.now(), createdAt: new Date().toISOString(), ...triageData };
+    }
+
+    setTriageHistory(prev => {
+      const updated = [savedRecord, ...prev];
+      localStorage.setItem('asha_triage_history', JSON.stringify(updated));
+      return updated;
+    });
+    showToast('Triage record saved!');
   };
 
   const showToast = (message) => {
@@ -249,7 +292,7 @@ function App() {
 
       <main className="max-w-5xl mx-auto p-6">
         {currentView === 'dashboard' && (
-          <Dashboard user={user} patientsCount={patients.length} setCurrentView={setCurrentView} />
+          <Dashboard user={user} patientsCount={patients.length} setCurrentView={setCurrentView} onStartTriage={handleStartTriage} />
         )}
         {currentView === 'patients' && (
           <Patients patients={patients} setCurrentView={setCurrentView} onStartTriage={handleStartTriage} />
@@ -258,6 +301,15 @@ function App() {
           <AddPatient handleAddPatient={handleAddPatient} />
         )}
       </main>
+
+      <VoiceTriageModal
+        isOpen={isTriageModalOpen}
+        onClose={() => setIsTriageModalOpen(false)}
+        patient={triagePatient}
+        onSaveTriage={handleSaveTriage}
+        user={user}
+        handleAddPatient={handleAddPatient}
+      />
     </div>
   );
 }
