@@ -9,6 +9,7 @@ const path = require('path');
 const User = require('./models/User');
 const Patient = require('./models/Patient');
 const Triage = require('./models/Triage');
+const { analyzeSpokenTriage } = require('./llm/openrouter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -587,6 +588,21 @@ app.post('/api/triage', async (req, res) => {
   } catch (error) {
     console.error('Create Triage Error:', error);
     res.status(500).json({ error: 'Failed to create triage record' });
+  }
+});
+
+// POST /api/analyze-triage - OpenRouter LLM voice triage engine
+app.post('/api/analyze-triage', async (req, res) => {
+  try {
+    const { text, language } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: 'Speech text payload is required.' });
+    }
+    const triageAnalysis = await analyzeSpokenTriage({ text, language });
+    return res.json(triageAnalysis);
+  } catch (error) {
+    console.error('Speech Triage Analysis Error:', error);
+    res.status(500).json({ error: 'Internal triage analysis error' });
   }
 });
 
