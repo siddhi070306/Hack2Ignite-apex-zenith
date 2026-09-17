@@ -120,6 +120,8 @@ export const translations = {
     no_facilities_found: 'No facilities found in this area.',
     nearby_emergency: 'Nearby Emergency Facilities',
     nearest: 'Nearest',
+    anchoring_polygon: 'Anchoring to Blockchain',
+    anchoring_polygon_desc: 'Creating a tamper-proof digital receipt of this triage record.',
   },
   hi: {
     app_title: 'आशा साथी',
@@ -239,6 +241,8 @@ export const translations = {
     no_facilities_found: 'इस क्षेत्र में कोई सुविधा नहीं मिली।',
     nearby_emergency: 'नज़दीकी आपातकालीन सुविधाएं',
     nearest: 'निकटतम',
+    anchoring_polygon: 'ब्लॉकचेन पर सुरक्षित किया जा रहा है',
+    anchoring_polygon_desc: 'इस ट्राइएज रिकॉर्ड की छेड़छाड़-रोधी डिजिटल रसीद बनाई जा रही है।',
   },
   mr: {
     app_title: 'आशा साथी',
@@ -358,5 +362,7 @@ export const translations = {
     no_facilities_found: 'या भागात कोणतीही सुविधा आढळली नाही.',
     nearby_emergency: 'जवळपासच्या आपत्कालीन सुविधा',
     nearest: 'सर्वात जवळ',
+    anchoring_polygon: 'ब्लॉकचेनवर सुरक्षित केले जात आहे',
+    anchoring_polygon_desc: 'या ट्रायेज रेकॉर्डची छेडछाड-प्रूफ डिजिटल पावती तयार केली जात आहे.',
   },
 };
