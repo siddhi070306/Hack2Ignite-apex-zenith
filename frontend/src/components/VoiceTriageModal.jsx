@@ -89,6 +89,18 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
 
   const [anchoringLogs, setAnchoringLogs] = useState('');
   const [calculatedHash, setCalculatedHash] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
+
+  // Suggests a sensible default follow-up date based on urgency — the ASHA worker can
+  // always change or clear it. Red is already an emergency referral, so left blank
+  // rather than implying a routine follow-up is sufficient.
+  const suggestFollowUpDate = (forUrgency) => {
+    if (forUrgency === 'Red') return '';
+    const daysAhead = forUrgency === 'Yellow' ? 1 : 3;
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    return d.toISOString().slice(0, 10);
+  };
 
   const [nearingAutoStop, setNearingAutoStop] = useState(false);
   const [sttProvider, setSttProvider] = useState(''); // 'web-speech' | 'sarvam' | ''
@@ -185,6 +197,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
       setPErr('');
       setAnchoringLogs('');
       setCalculatedHash('');
+      setFollowUpDate('');
       setGroundedSources([]);
       setAdviceSource(null);
       setSttProvider('');
@@ -474,6 +487,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     setTranslation(result.translation || textToAnalyze);
     setEditableSymptoms(result.symptoms || []);
     setVerificationStep(false);
+    setFollowUpDate(suggestFollowUpDate(result.urgency || 'Green'));
     setTriageStep('completed');
   };
 
@@ -560,7 +574,8 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
           advice,
           txHash,
           blockNumber,
-          dataHash
+          dataHash,
+          followUpDate: followUpDate || null
         });
         onClose();
       } finally {
@@ -916,6 +931,24 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
                     </span>
                   ))}
                 </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider block mb-2">{t('schedule_followup')}</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="date"
+                    value={followUpDate}
+                    onChange={(e) => setFollowUpDate(e.target.value)}
+                    className="flex-grow min-h-[42px] px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-[#0A2540] focus:outline-none focus:border-[#E07A5F]"
+                  />
+                  {followUpDate && (
+                    <button type="button" onClick={() => setFollowUpDate('')} className="text-xs font-bold text-slate-400 hover:text-slate-600">
+                      {t('clear')}
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1.5">{t('schedule_followup_hint')}</p>
               </div>
             </div>
           )}

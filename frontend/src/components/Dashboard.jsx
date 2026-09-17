@@ -1,14 +1,20 @@
 import React from 'react';
-import { Mic, UserPlus, Users, ChevronRight } from 'lucide-react';
+import { Mic, UserPlus, Users, ChevronRight, CalendarClock, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { formatDateTime } from '../utils/dateUtils';
 
-export default function Dashboard({ user, patientsCount, triageHistory = [], setCurrentView, onStartTriage, setSelectedHistoryItem }) {
+export default function Dashboard({ user, patientsCount, triageHistory = [], setCurrentView, onStartTriage, setSelectedHistoryItem, onMarkFollowUpDone }) {
   const { t } = useLanguage();
 
   const today = new Date().toDateString();
   const triagesTodayCount = triageHistory.filter(item => new Date(item.createdAt || item.date).toDateString() === today).length;
   const redAlertsCount = triageHistory.filter(item => (item.doctorUrgency || item.urgency) === 'Red').length;
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const followUpsDue = triageHistory
+    .filter(item => item.followUpDate && !item.followUpDone && new Date(item.followUpDate) <= startOfToday)
+    .sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate));
 
   return (
     <div className="space-y-6">
@@ -69,6 +75,30 @@ export default function Dashboard({ user, patientsCount, triageHistory = [], set
           <span className="text-2xl md:text-3xl font-black text-[#0A2540]">{triageHistory.length}</span>
         </div>
       </div>
+
+      {followUpsDue.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="font-heading font-extrabold text-xl text-[#0A2540] flex items-center gap-2">
+            <CalendarClock className="w-5 h-5 text-[#E07A5F]" /> {t('followups_due')} ({followUpsDue.length})
+          </h2>
+          <div className="space-y-2">
+            {followUpsDue.map((item) => (
+              <div key={item.id} className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div onClick={() => setSelectedHistoryItem(item)} className="cursor-pointer">
+                  <h4 className="font-bold text-[#0A2540] text-sm">{item.patientName}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">{t('schedule_followup')}: {formatDateTime(item.followUpDate)}</p>
+                </div>
+                <button
+                  onClick={() => onMarkFollowUpDone(item.id)}
+                  className="shrink-0 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+                >
+                  <Check className="w-3.5 h-3.5 text-emerald-600" /> {t('mark_done')}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         <div className="flex justify-between items-center">

@@ -190,6 +190,25 @@ function App() {
     showToast('Triage verification saved!');
   };
 
+  const handleMarkFollowUpDone = async (triageId) => {
+    try {
+      await fetch(`${API_BASE_URL}/api/triage/${triageId}/followup`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followUpDone: true }),
+      });
+    } catch (err) {
+      // Offline — still reflect it locally below; will simply not have synced server-side
+    }
+
+    setTriageHistory(prev => {
+      const updated = prev.map(item => item.id === triageId ? { ...item, followUpDone: true } : item);
+      localStorage.setItem('asha_triage_history', JSON.stringify(updated));
+      return updated;
+    });
+    showToast('Follow-up marked as done!');
+  };
+
   const showToast = (message) => {
     setToast(message);
     setTimeout(() => setToast(null), 3000);
@@ -381,7 +400,7 @@ function App() {
           user.role === 'Doctor' ? (
             <DoctorDashboard user={user} patients={patients} triageHistory={triageHistory} onVerifyTriage={handleVerifyTriage} setSelectedHistoryItem={setSelectedHistoryItem} />
           ) : (
-            <Dashboard user={user} patientsCount={patients.length} triageHistory={triageHistory} setCurrentView={setCurrentView} onStartTriage={handleStartTriage} setSelectedHistoryItem={setSelectedHistoryItem} />
+            <Dashboard user={user} patientsCount={patients.length} triageHistory={triageHistory} setCurrentView={setCurrentView} onStartTriage={handleStartTriage} setSelectedHistoryItem={setSelectedHistoryItem} onMarkFollowUpDone={handleMarkFollowUpDone} />
           )
         )}
         {currentView === 'patients' && (
