@@ -146,6 +146,7 @@ export const translations = {
     verify_triage_action: 'Verify Triage',
     doctor_message_placeholder: 'Write clear instructions for the ASHA worker...',
     confirm_triage_btn: 'Confirm Verification',
+    source_label: 'Source',
   },
   hi: {
     app_title: 'आशा साथी',
@@ -291,6 +292,7 @@ export const translations = {
     verify_triage_action: 'ट्राइएज सत्यापित करें',
     doctor_message_placeholder: 'आशा कार्यकर्ता के लिए स्पष्ट निर्देश लिखें...',
     confirm_triage_btn: 'सत्यापन की पुष्टि करें',
+    source_label: 'स्रोत',
   },
   mr: {
     app_title: 'आशा साथी',
@@ -436,5 +438,6 @@ export const translations = {
     verify_triage_action: 'ट्रायेज पडताळा',
     doctor_message_placeholder: 'आशा कार्यकर्त्यासाठी स्पष्ट सूचना लिहा...',
     confirm_triage_btn: 'पडताळणीची पुष्टी करा',
+    source_label: 'स्रोत',
   },
 };
