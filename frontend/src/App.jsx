@@ -6,6 +6,8 @@ import Patients from './components/Patients';
 import AddPatient from './components/AddPatient';
 import VoiceTriageModal from './components/VoiceTriageModal';
 import HospitalsMap from './components/HospitalsMap';
+import DoctorDashboard from './components/DoctorDashboard';
+import History from './components/History';
 import { registerDynamicVillage } from './utils/hospitals';
 import { useLanguage } from './context/LanguageContext';
 import { API_BASE_URL } from './config';
@@ -37,6 +39,7 @@ function App() {
   });
   const [isTriageModalOpen, setIsTriageModalOpen] = useState(false);
   const [triagePatient, setTriagePatient] = useState(null);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
 
   const [isLocationManual, setIsLocationManual] = useState(() => localStorage.getItem('asha_location_manual') === 'true');
   const [userCoords, setUserCoordsState] = useState(() => {
@@ -159,6 +162,32 @@ function App() {
       return updated;
     });
     showToast('Triage record saved!');
+  };
+
+  const handleVerifyTriage = async (triageId, verificationPayload) => {
+    let updatedRecord;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/triage/${triageId}/verify`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(verificationPayload),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to verify triage record');
+      updatedRecord = data;
+    } catch (err) {
+      updatedRecord = null;
+    }
+
+    setTriageHistory(prev => {
+      const updated = prev.map(item => {
+        if (item.id !== triageId) return item;
+        return updatedRecord || { ...item, doctorVerificationStatus: 'verified', verifiedAt: new Date().toISOString(), ...verificationPayload };
+      });
+      localStorage.setItem('asha_triage_history', JSON.stringify(updated));
+      return updated;
+    });
+    showToast('Triage verification saved!');
   };
 
   const showToast = (message) => {
@@ -321,6 +350,14 @@ function App() {
           {t('app_title')}
         </button>
         <div className="flex items-center gap-3">
+          {user.role !== 'Doctor' && (
+            <button
+              onClick={() => setCurrentView('history')}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-semibold transition-colors"
+            >
+              <span className="hidden sm:inline">{t('triage_history')}</span>
+            </button>
+          )}
           <button
             onClick={() => setCurrentView('hospitals')}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-semibold transition-colors"
@@ -339,13 +376,20 @@ function App() {
 
       <main className="max-w-5xl mx-auto p-6">
         {currentView === 'dashboard' && (
-          <Dashboard user={user} patientsCount={patients.length} setCurrentView={setCurrentView} onStartTriage={handleStartTriage} />
+          user.role === 'Doctor' ? (
+            <DoctorDashboard user={user} patients={patients} triageHistory={triageHistory} onVerifyTriage={handleVerifyTriage} setSelectedHistoryItem={setSelectedHistoryItem} />
+          ) : (
+            <Dashboard user={user} patientsCount={patients.length} triageHistory={triageHistory} setCurrentView={setCurrentView} onStartTriage={handleStartTriage} setSelectedHistoryItem={setSelectedHistoryItem} />
+          )
         )}
         {currentView === 'patients' && (
           <Patients patients={patients} setCurrentView={setCurrentView} onStartTriage={handleStartTriage} />
         )}
         {currentView === 'add-patient' && (
           <AddPatient handleAddPatient={handleAddPatient} />
+        )}
+        {currentView === 'history' && (
+          <History triageHistory={triageHistory} setSelectedHistoryItem={setSelectedHistoryItem} />
         )}
         {currentView === 'hospitals' && (
           <HospitalsMap
@@ -358,6 +402,52 @@ function App() {
           />
         )}
       </main>
+
+      {selectedHistoryItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A2540]/60 backdrop-blur-sm" onClick={() => setSelectedHistoryItem(null)}>
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 bg-[#0A2540] text-white flex justify-between items-center shrink-0">
+              <div>
+                <h3 className="font-heading font-extrabold text-lg">{selectedHistoryItem.patientName}</h3>
+                <p className="text-xs text-white/70">{selectedHistoryItem.village} · {selectedHistoryItem.language}</p>
+              </div>
+              <button onClick={() => setSelectedHistoryItem(null)} className="p-2 rounded-full hover:bg-white/10 text-white/80 hover:text-white">
+                <LogOut className="w-4 h-4 rotate-180" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4 text-sm">
+              <div className={`p-3 rounded-xl text-xs font-black uppercase tracking-wider inline-block ${(selectedHistoryItem.doctorUrgency || selectedHistoryItem.urgency) === 'Red' ? 'bg-red-100 text-red-800' : (selectedHistoryItem.doctorUrgency || selectedHistoryItem.urgency) === 'Yellow' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>
+                {selectedHistoryItem.doctorUrgency || selectedHistoryItem.urgency} Urgency
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Transcript</span>
+                <p className="italic text-slate-800">"{selectedHistoryItem.transcript}"</p>
+              </div>
+              {selectedHistoryItem.translation && (
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase block mb-1">English Translation</span>
+                  <p className="text-slate-700">"{selectedHistoryItem.translation}"</p>
+                </div>
+              )}
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Advice</span>
+                <p className="text-slate-700">{selectedHistoryItem.advice}</p>
+              </div>
+              {selectedHistoryItem.doctorMessage && (
+                <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl">
+                  <span className="text-xs font-bold text-emerald-800 uppercase block mb-1">Doctor's Message</span>
+                  <p className="text-emerald-900 font-semibold">"{selectedHistoryItem.doctorMessage}"</p>
+                </div>
+              )}
+              {selectedHistoryItem.txHash && (
+                <div className="text-xs text-slate-400 font-mono break-all border-t border-slate-100 pt-3">
+                  Digital Safety ID: {selectedHistoryItem.dataHash?.substring(0, 24)}...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <VoiceTriageModal
         isOpen={isTriageModalOpen}
