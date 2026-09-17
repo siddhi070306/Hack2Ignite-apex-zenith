@@ -12,6 +12,7 @@ const Triage = require('./models/Triage');
 const { analyzeSpokenTriage } = require('./llm/openrouter');
 const { getRagAdvice } = require('./llm/rag');
 const { speechToText, textToSpeech, translateToEnglish } = require('./llm/sarvam');
+const { record: recordMetric, getAllStats } = require('./metrics');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -622,11 +623,14 @@ app.post('/api/speech-to-text', async (req, res) => {
     }
 
     const buffer = Buffer.from(base64Data, 'base64');
+    const start = Date.now();
     const result = await speechToText({ buffer, mimeType, filename, languageCode });
+    const timingMs = Date.now() - start;
+    recordMetric('stt', timingMs);
     if (result.error) {
-      return res.status(result.status || 400).json(result);
+      return res.status(result.status || 400).json({ ...result, timingMs });
     }
-    return res.json(result);
+    return res.json({ ...result, timingMs });
   } catch (error) {
     console.error('Speech-to-Text Error:', error);
     res.status(500).json({ error: 'Internal speech-to-text error', fallback: true });
@@ -640,11 +644,14 @@ app.post('/api/text-to-speech', async (req, res) => {
     if (!text) {
       return res.status(400).json({ error: 'Text payload is required.' });
     }
+    const start = Date.now();
     const result = await textToSpeech({ text, languageCode });
+    const timingMs = Date.now() - start;
+    recordMetric('tts', timingMs);
     if (result.error) {
-      return res.status(result.status || 400).json(result);
+      return res.status(result.status || 400).json({ ...result, timingMs });
     }
-    return res.json(result);
+    return res.json({ ...result, timingMs });
   } catch (error) {
     console.error('Text-to-Speech Error:', error);
     res.status(500).json({ error: 'Internal text-to-speech error' });
@@ -723,13 +730,27 @@ app.post('/api/analyze-triage', async (req, res) => {
     if (!text) {
       return res.status(400).json({ error: 'Speech text payload is required.' });
     }
-    const triageAnalysis = await analyzeSpokenTriage({ text, language });
+    // The RAG lookup doesn't depend on the analysis result (it only ever reads `text`),
+    // so run both concurrently instead of sequentially — the worst case drops from
+    // analysis-time + rag-time to max(analysis-time, rag-time). If RAG is unavailable,
+    // the LLM/fallback advice from analysis is left untouched.
+    const start = Date.now();
+    const [analysisResult, ragResult] = await Promise.all([
+      (async () => {
+        const t0 = Date.now();
+        const result = await analyzeSpokenTriage({ text, language });
+        recordMetric('analysis', Date.now() - t0);
+        return result;
+      })(),
+      (async () => {
+        const t0 = Date.now();
+        const result = await getRagAdvice({ text, urgency: null });
+        recordMetric('rag', Date.now() - t0);
+        return result;
+      })()
+    ]);
 
-    // Optionally overlay advice from the RAG service. It always tries to answer, but
-    // labels how: "rag" (grounded, cited) or "llm" (no corpus match, general knowledge).
-    // Never blocks or fails the request — if RAG is unavailable, the existing
-    // LLM/fallback advice above is left untouched.
-    const ragResult = await getRagAdvice({ text, urgency: triageAnalysis.urgency });
+    const triageAnalysis = analysisResult;
     if (ragResult) {
       triageAnalysis.advice = ragResult.advice;
       triageAnalysis.groundedSources = ragResult.sources;
@@ -738,12 +759,18 @@ app.post('/api/analyze-triage', async (req, res) => {
       triageAnalysis.groundedSources = [];
       triageAnalysis.adviceSource = null;
     }
+    triageAnalysis.timingMs = Date.now() - start;
 
     return res.json(triageAnalysis);
   } catch (error) {
     console.error('Speech Triage Analysis Error:', error);
     res.status(500).json({ error: 'Internal triage analysis error' });
   }
+});
+
+// GET /api/metrics/voice - rolling p50/p95 latency for STT, TTS, analysis, and RAG lookup
+app.get('/api/metrics/voice', (req, res) => {
+  res.json(getAllStats());
 });
 
 // GET /api/health - server & DB status check

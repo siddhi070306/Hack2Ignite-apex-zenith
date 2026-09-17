@@ -9,7 +9,7 @@
  *   - "none": no LLM configured/reachable at all
  */
 
-const RAG_TIMEOUT_MS = 6000;
+const RAG_TIMEOUT_MS = 3000;
 
 async function getRagAdvice({ text, urgency }) {
   const ragUrl = process.env.RAG_SERVICE_URL;
