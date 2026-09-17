@@ -8,6 +8,7 @@ const path = require('path');
 
 const User = require('./models/User');
 const Patient = require('./models/Patient');
+const Triage = require('./models/Triage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -522,6 +523,70 @@ app.post('/api/patients', async (req, res) => {
   } catch (error) {
     console.error('Create Patient Error:', error);
     res.status(500).json({ error: 'Failed to create patient' });
+  }
+});
+
+// JSON file fallback helper path for triage records
+const TRIAGE_FILE = path.join(__dirname, 'triage.json');
+
+// GET /api/triage - fetch triage history
+app.get('/api/triage', async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      const records = await Triage.find().sort({ createdAt: -1 });
+      const formatted = records.map(r => {
+        const obj = r.toObject();
+        return { ...obj, id: obj._id.toString() };
+      });
+      return res.json(formatted);
+    }
+    return res.json(getJsonData(TRIAGE_FILE));
+  } catch (error) {
+    console.error('Fetch Triage Error:', error);
+    res.status(500).json({ error: 'Failed to fetch triage records' });
+  }
+});
+
+// POST /api/triage - create triage record
+app.post('/api/triage', async (req, res) => {
+  try {
+    const {
+      patientName, patientAge, patientGender, village, ashaName, urgency,
+      symptoms, keywords, advice, transcript, translation, language, coordinates
+    } = req.body;
+
+    if (!patientName || !ashaName || !urgency) {
+      return res.status(400).json({ error: 'Patient name, ASHA name, and urgency are required.' });
+    }
+
+    if (isMongoConnected) {
+      const newTriage = new Triage({
+        patientName, patientAge, patientGender, village, ashaName, urgency,
+        symptoms: symptoms || [], keywords: keywords || [], advice: advice || '',
+        transcript: transcript || '', translation: translation || '', language: language || '',
+        coordinates: coordinates || null
+      });
+      await newTriage.save();
+      const obj = newTriage.toObject();
+      return res.status(201).json({ ...obj, id: obj._id.toString() });
+    }
+
+    const records = getJsonData(TRIAGE_FILE);
+    const newRecord = {
+      id: 'triage-' + Date.now(),
+      patientName, patientAge, patientGender, village, ashaName, urgency,
+      symptoms: symptoms || [], keywords: keywords || [], advice: advice || '',
+      transcript: transcript || '', translation: translation || '', language: language || '',
+      coordinates: coordinates || null,
+      doctorVerificationStatus: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    records.unshift(newRecord);
+    saveJsonData(TRIAGE_FILE, records);
+    return res.status(201).json(newRecord);
+  } catch (error) {
+    console.error('Create Triage Error:', error);
+    res.status(500).json({ error: 'Failed to create triage record' });
   }
 });
 
