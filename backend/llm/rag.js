@@ -1,12 +1,17 @@
 /**
  * Thin client for the optional rag/ Python service (see rag/app.py).
- * Never blocks or breaks triage analysis: any failure, timeout, or an
- * ungrounded response just means the caller keeps its existing advice text.
+ * Never blocks or breaks triage analysis: any failure or a "none" response just means
+ * the caller keeps its existing advice text untouched.
+ *
+ * The RAG service always tries to answer, but labels how it got there:
+ *   - "rag": grounded in rag/corpus/, with citations
+ *   - "llm": no corpus match — general LLM knowledge, no citations
+ *   - "none": no LLM configured/reachable at all
  */
 
-const RAG_TIMEOUT_MS = 4000;
+const RAG_TIMEOUT_MS = 6000;
 
-async function getGroundedAdvice({ text, urgency }) {
+async function getRagAdvice({ text, urgency }) {
   const ragUrl = process.env.RAG_SERVICE_URL;
   if (!ragUrl) return null;
 
@@ -24,13 +29,13 @@ async function getGroundedAdvice({ text, urgency }) {
 
     if (!response.ok) return null;
     const data = await response.json();
-    if (!data.grounded) return null;
+    if (!data.advice || data.source === 'none') return null;
 
-    return { advice: data.advice, sources: data.sources || [] };
+    return { advice: data.advice, sources: data.sources || [], source: data.source };
   } catch (err) {
     console.warn('RAG service unreachable or timed out, keeping existing advice:', err.message);
     return null;
   }
 }
 
-module.exports = { getGroundedAdvice };
+module.exports = { getRagAdvice };

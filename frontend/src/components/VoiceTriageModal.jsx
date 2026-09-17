@@ -74,6 +74,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   const [keywords, setKeywords] = useState([]);
   const [advice, setAdvice] = useState('');
   const [groundedSources, setGroundedSources] = useState([]);
+  const [adviceSource, setAdviceSource] = useState(null); // 'rag' | 'llm' | null
 
   const [inputMode, setInputMode] = useState('voice');
   const [manualText, setManualText] = useState('');
@@ -108,6 +109,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
       setAnchoringLogs('');
       setCalculatedHash('');
       setGroundedSources([]);
+      setAdviceSource(null);
       if (timerRef.current) clearInterval(timerRef.current);
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         try { mediaRecorderRef.current.stop(); } catch (e) {}
@@ -346,6 +348,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     setKeywords(result.keywords || []);
     setAdvice(result.advice || '');
     setGroundedSources(result.groundedSources || []);
+    setAdviceSource(result.adviceSource || null);
     setTranslation(result.translation || textToAnalyze);
     setEditableSymptoms(result.symptoms || []);
     setVerificationStep(false);
@@ -687,13 +690,19 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
                       {ttsState === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : ttsState === 'playing' ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </button>
                   </div>
-                  {groundedSources.length > 0 && (
+                  {groundedSources.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {groundedSources.map((src, idx) => (
                         <span key={idx} className="px-2 py-0.5 rounded-md bg-white/70 border border-current/20 text-[10px] font-semibold opacity-70">
                           📖 {t('source_label')}: {src.title}
                         </span>
                       ))}
+                    </div>
+                  ) : adviceSource === 'llm' && (
+                    <div className="mt-2">
+                      <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wide">
+                        ⚠ {t('llm_ungrounded_label')}
+                      </span>
                     </div>
                   )}
                 </div>

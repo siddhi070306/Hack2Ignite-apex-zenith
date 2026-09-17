@@ -1,6 +1,12 @@
 """
-RAG advice service: grounds triage advice in rag/corpus/ via retrieval, and refuses to
-generate an answer when nothing relevant is found (rather than letting the LLM guess).
+RAG advice service: always produces an answer, but is honest about how it got there.
+
+- If retrieval finds a confident match in rag/corpus/, the LLM is asked to answer using
+  ONLY that context, and the response is labeled source="rag" with citations.
+- If nothing relevant is found, the LLM is still called (for general clinical knowledge),
+  but the response is labeled source="llm" with no citations, so callers/UI can be
+  transparent about the difference rather than silently guessing.
+- source="none" only when no LLM is configured/reachable at all.
 
 Run with: uvicorn app:app --port 8001 --reload
 Requires rag/index/ to exist — build it first with `python ingest.py`.
@@ -9,6 +15,7 @@ Requires rag/index/ to exist — build it first with `python ingest.py`.
 import json
 import os
 import re
+import urllib.request
 from pathlib import Path
 from typing import List, Optional
 
@@ -71,7 +78,7 @@ class Source(BaseModel):
 
 
 class AdviceResponse(BaseModel):
-    grounded: bool
+    source: str  # "rag" | "llm" | "none"
     advice: Optional[str] = None
     sources: List[Source] = []
 
@@ -96,20 +103,9 @@ def strip_disallowed_medicines(text: str) -> str:
     return " ".join(kept).strip()
 
 
-def generate_grounded_advice(query: str, hits: List[dict]) -> Optional[str]:
+def call_openrouter(system_prompt: str, user_prompt: str) -> Optional[str]:
     if not OPENROUTER_API_KEY:
         return None
-
-    context = "\n\n".join(f"[{h['citation']}]\n{h['text']}" for h in hits)
-    system_prompt = (
-        "You are a clinical guidance assistant for ASHA health workers. Answer ONLY using facts "
-        "explicitly stated in the CONTEXT below. Do not add information, medicines, or dosages that "
-        "are not present in the context. Cite the bracketed source tag after every claim you make. "
-        "If the context does not address the patient's situation, respond with exactly: NOT_GROUNDED"
-    )
-    user_prompt = f"CONTEXT:\n{context}\n\nPATIENT SITUATION: {query}\n\nGive 1-3 sentences of grounded, cited advice."
-
-    import urllib.request
 
     payload = json.dumps({
         "model": OPENROUTER_MODEL,
@@ -137,9 +133,42 @@ def generate_grounded_advice(query: str, hits: List[dict]) -> Optional[str]:
     except Exception:
         return None
 
+    return content or None
+
+
+def generate_grounded_advice(query: str, hits: List[dict]) -> Optional[str]:
+    """Answer strictly from the retrieved context. Returns None if the model itself
+    decides the context doesn't cover the situation (caller then falls back to
+    the ungrounded/general-knowledge path)."""
+    context = "\n\n".join(f"[{h['citation']}]\n{h['text']}" for h in hits)
+    system_prompt = (
+        "You are a clinical guidance assistant for ASHA health workers. Answer ONLY using facts "
+        "explicitly stated in the CONTEXT below. Do not add information, medicines, or dosages that "
+        "are not present in the context. Cite the bracketed source tag after every claim you make. "
+        "If the context does not address the patient's situation, respond with exactly: NOT_GROUNDED"
+    )
+    user_prompt = f"CONTEXT:\n{context}\n\nPATIENT SITUATION: {query}\n\nGive 1-3 sentences of grounded, cited advice."
+
+    content = call_openrouter(system_prompt, user_prompt)
     if not content or "NOT_GROUNDED" in content:
         return None
+    return strip_disallowed_medicines(content)
 
+
+def generate_general_advice(query: str) -> Optional[str]:
+    """No matching corpus guidance — ask the LLM from general clinical knowledge instead
+    of returning nothing. Callers must label this clearly as ungrounded (source="llm")."""
+    system_prompt = (
+        "You are a clinical guidance assistant for ASHA health workers in India. The internal "
+        "verified knowledge base has no specific guidance for this situation, so answer using general "
+        "clinical knowledge instead. Do not mention specific medicines or drug dosages. Be cautious, "
+        "keep it to 1-3 sentences, and recommend escalation to a doctor/ANM/hospital when in doubt."
+    )
+    user_prompt = f"PATIENT SITUATION: {query}\n\nGive 1-3 sentences of general clinical advice."
+
+    content = call_openrouter(system_prompt, user_prompt)
+    if not content:
+        return None
     return strip_disallowed_medicines(content)
 
 
@@ -147,18 +176,24 @@ def generate_grounded_advice(query: str, hits: List[dict]) -> Optional[str]:
 def get_advice(req: AdviceRequest):
     text = (req.text or "").strip()
     if not text:
-        return AdviceResponse(grounded=False)
+        return AdviceResponse(source="none")
 
     hits = retrieve(text)
-    if not hits or hits[0]["score"] < SIMILARITY_THRESHOLD:
-        return AdviceResponse(grounded=False)
+    is_grounded_candidate = bool(hits) and hits[0]["score"] >= SIMILARITY_THRESHOLD
 
-    advice = generate_grounded_advice(text, hits)
-    if not advice:
-        return AdviceResponse(grounded=False)
+    if is_grounded_candidate:
+        advice = generate_grounded_advice(text, hits)
+        if advice:
+            sources = [Source(docId=h["doc_id"], title=h["title"]) for h in hits if h["score"] >= SIMILARITY_THRESHOLD]
+            return AdviceResponse(source="rag", advice=advice, sources=sources)
+        # The LLM itself found the retrieved context insufficient — fall through
+        # to the general-knowledge path below instead of returning nothing.
 
-    sources = [Source(docId=h["doc_id"], title=h["title"]) for h in hits if h["score"] >= SIMILARITY_THRESHOLD]
-    return AdviceResponse(grounded=True, advice=advice, sources=sources)
+    advice = generate_general_advice(text)
+    if advice:
+        return AdviceResponse(source="llm", advice=advice, sources=[])
+
+    return AdviceResponse(source="none")
 
 
 @app.get("/health")

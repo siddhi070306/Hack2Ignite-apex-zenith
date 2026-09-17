@@ -10,7 +10,7 @@ const User = require('./models/User');
 const Patient = require('./models/Patient');
 const Triage = require('./models/Triage');
 const { analyzeSpokenTriage } = require('./llm/openrouter');
-const { getGroundedAdvice } = require('./llm/rag');
+const { getRagAdvice } = require('./llm/rag');
 const { speechToText, textToSpeech, translateToEnglish } = require('./llm/sarvam');
 
 const app = express();
@@ -725,15 +725,18 @@ app.post('/api/analyze-triage', async (req, res) => {
     }
     const triageAnalysis = await analyzeSpokenTriage({ text, language });
 
-    // Optionally overlay grounded, cited advice from the RAG service. Never blocks or
-    // fails the request — if RAG is unavailable or has nothing grounded, the existing
+    // Optionally overlay advice from the RAG service. It always tries to answer, but
+    // labels how: "rag" (grounded, cited) or "llm" (no corpus match, general knowledge).
+    // Never blocks or fails the request — if RAG is unavailable, the existing
     // LLM/fallback advice above is left untouched.
-    const grounded = await getGroundedAdvice({ text, urgency: triageAnalysis.urgency });
-    if (grounded) {
-      triageAnalysis.advice = grounded.advice;
-      triageAnalysis.groundedSources = grounded.sources;
+    const ragResult = await getRagAdvice({ text, urgency: triageAnalysis.urgency });
+    if (ragResult) {
+      triageAnalysis.advice = ragResult.advice;
+      triageAnalysis.groundedSources = ragResult.sources;
+      triageAnalysis.adviceSource = ragResult.source;
     } else {
       triageAnalysis.groundedSources = [];
+      triageAnalysis.adviceSource = null;
     }
 
     return res.json(triageAnalysis);
