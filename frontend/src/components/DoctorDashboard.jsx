@@ -344,6 +344,27 @@ export default function DoctorDashboard({ user, patients = [], triageHistory = [
             </div>
 
             <form onSubmit={handleConfirmVerification} className="p-6 overflow-y-auto space-y-5 flex-grow text-left">
+              {(() => {
+                const priorVisits = triageHistory
+                  .filter(t => t.id !== verifyingTriage.id && t.patientName?.toLowerCase() === verifyingTriage.patientName?.toLowerCase())
+                  .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+                if (priorVisits.length === 0) return null;
+                return (
+                  <div className="bg-sky-50 border border-sky-200 p-3.5 rounded-2xl space-y-2">
+                    <span className="text-[10px] font-black text-sky-800 uppercase tracking-wider block">Patient History ({priorVisits.length} prior visit{priorVisits.length !== 1 ? 's' : ''})</span>
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                      {priorVisits.map(v => (
+                        <div key={v.id} className="flex items-center justify-between gap-2 text-xs bg-white/70 rounded-lg px-2.5 py-1.5">
+                          <span className={`font-black uppercase text-[9px] px-1.5 py-0.5 rounded shrink-0 ${v.urgency === 'Red' ? 'bg-red-600 text-white' : v.urgency === 'Yellow' ? 'bg-amber-500 text-white' : 'bg-green-600 text-white'}`}>{v.urgency}</span>
+                          <span className="text-slate-600 truncate flex-grow">{(v.symptoms || []).join(', ') || 'No symptoms recorded'}</span>
+                          <span className="text-slate-400 shrink-0">{formatDateTime(v.createdAt || v.date)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Original Voice Input from ASHA ({verifyingTriage.ashaName})</span>
