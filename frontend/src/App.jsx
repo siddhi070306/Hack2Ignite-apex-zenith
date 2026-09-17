@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, Activity } from 'lucide-react';
+import { LogOut, Activity, MapPin } from 'lucide-react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Patients from './components/Patients';
 import AddPatient from './components/AddPatient';
 import VoiceTriageModal from './components/VoiceTriageModal';
+import HospitalsMap from './components/HospitalsMap';
+import { registerDynamicVillage } from './utils/hospitals';
 import { useLanguage } from './context/LanguageContext';
 import { API_BASE_URL } from './config';
 
@@ -35,6 +37,45 @@ function App() {
   });
   const [isTriageModalOpen, setIsTriageModalOpen] = useState(false);
   const [triagePatient, setTriagePatient] = useState(null);
+
+  const [isLocationManual, setIsLocationManual] = useState(() => localStorage.getItem('asha_location_manual') === 'true');
+  const [userCoords, setUserCoordsState] = useState(() => {
+    const saved = localStorage.getItem('asha_user_coords');
+    return saved ? JSON.parse(saved) : (user?.coordinates || null);
+  });
+  const [userLocationName, setUserLocationNameState] = useState(() => localStorage.getItem('asha_user_location') || user?.location || '');
+
+  const updateLocation = (coords, name, manual = false) => {
+    setUserCoordsState(coords);
+    setUserLocationNameState(name);
+    setIsLocationManual(manual);
+    localStorage.setItem('asha_user_coords', JSON.stringify(coords));
+    localStorage.setItem('asha_user_location', name);
+    localStorage.setItem('asha_location_manual', String(manual));
+    if (name && coords) registerDynamicVillage(name, coords.latitude, coords.longitude);
+  };
+
+  const resetToAutoGps = () => {
+    setIsLocationManual(false);
+    localStorage.setItem('asha_location_manual', 'false');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => updateLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude }, userLocationName, false),
+        () => {}
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (!user || userCoords) return;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => updateLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude }, userLocationName || user.location, false),
+        () => {}
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -280,6 +321,12 @@ function App() {
           {t('app_title')}
         </button>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setCurrentView('hospitals')}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-semibold transition-colors"
+          >
+            <MapPin className="w-4 h-4" /> <span className="hidden sm:inline">{t('hospitals')}</span>
+          </button>
           <span className="text-sm text-slate-500 hidden sm:inline">{user.name} · {user.role}</span>
           <button
             onClick={handleLogout}
@@ -300,6 +347,16 @@ function App() {
         {currentView === 'add-patient' && (
           <AddPatient handleAddPatient={handleAddPatient} />
         )}
+        {currentView === 'hospitals' && (
+          <HospitalsMap
+            userCoords={userCoords}
+            userLocationName={userLocationName}
+            setUserCoords={updateLocation}
+            isLocationManual={isLocationManual}
+            resetToAutoGps={resetToAutoGps}
+            onBack={() => setCurrentView('dashboard')}
+          />
+        )}
       </main>
 
       <VoiceTriageModal
@@ -308,6 +365,7 @@ function App() {
         patient={triagePatient}
         onSaveTriage={handleSaveTriage}
         user={user}
+        userCoords={userCoords}
         handleAddPatient={handleAddPatient}
       />
     </div>

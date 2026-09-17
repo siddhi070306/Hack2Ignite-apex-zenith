@@ -2,22 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Activity, Phone, Lock, ArrowRight, Globe, ChevronDown, MapPin, Check, User, Navigation, Loader2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { API_BASE_URL, GOOGLE_CLIENT_ID } from '../config';
-
-// Minimal, self-contained reverse geocoding (no dependency on the hospital-locator module yet).
-async function reverseGeocode(lat, lng) {
-  try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14`, {
-      headers: { 'Accept-Language': 'en', 'User-Agent': 'ASHA-Mitra-Triage-Companion-Agent' }
-    });
-    if (!response.ok) throw new Error('reverse geocode request failed');
-    const data = await response.json();
-    const addr = data.address || {};
-    return addr.village || addr.town || addr.suburb || addr.city_district || addr.city || addr.county || null;
-  } catch (err) {
-    console.warn('Reverse geocoding failed:', err);
-    return null;
-  }
-}
+import { reverseGeocode, resolveLocationCoordinates } from '../utils/hospitals';
 
 function LocationInputWithDropdown({
   label,
@@ -299,6 +284,7 @@ export default function Login({
     setGoogleSubmitting(true);
     try {
       const targetLoc = regLocation.trim() || 'District Sector';
+      const coords = await resolveLocationCoordinates(targetLoc, regCoords);
       const response = await fetch(`${API_BASE_URL}/api/auth/google/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -308,7 +294,7 @@ export default function Login({
           phone: regPhone,
           role: regRole || 'ASHA Worker',
           location: targetLoc,
-          coordinates: regCoords
+          coordinates: coords
         })
       });
       const data = await response.json();
@@ -381,13 +367,14 @@ export default function Login({
 
     setRegLoading(true);
     try {
+      const coords = await resolveLocationCoordinates(cleanLoc, regCoords);
       await handleRegister({
         name: cleanName,
         phone: cleanPhone,
         password: cleanPass,
         role: regRole === 'Doctor' ? 'Doctor' : 'ASHA Worker',
         location: cleanLoc,
-        coordinates: regCoords
+        coordinates: coords
       });
     } catch (err) {
       setRegError(err.message || 'Registration failed.');

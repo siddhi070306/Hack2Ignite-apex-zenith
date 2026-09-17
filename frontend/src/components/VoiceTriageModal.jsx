@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Mic, MicOff, AlertCircle, CheckCircle2, AlertTriangle, Languages, Clock, Volume2, VolumeX, Loader2, Sparkles } from 'lucide-react';
+import { X, Mic, MicOff, AlertCircle, CheckCircle2, AlertTriangle, Languages, Clock, Volume2, VolumeX, Loader2, Sparkles, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { API_BASE_URL } from '../config';
+import { getNearbyHospitalsAsync } from '../utils/hospitals';
 
 const INDIAN_LANGUAGES = [
   { code: 'hi', sarvamCode: 'hi-IN', name: 'हिन्दी · Hindi' },
@@ -50,7 +51,7 @@ function analyzeClinicalText(text, lang) {
   return { urgency: detectedUrgency, symptoms: detectedSymptoms, keywords: detectedKeywords, advice: detectedAdvice, translation: englishTranslation };
 }
 
-export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriage, user, handleAddPatient }) {
+export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriage, user, userCoords, handleAddPatient }) {
   const { t } = useLanguage();
   const [selectedLanguage, setSelectedLanguage] = useState('hi');
   const [triageStep, setTriageStep] = useState('idle'); // patient_info, idle, recording, analyzing, completed
@@ -79,6 +80,9 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   const [saving, setSaving] = useState(false);
   const [ttsState, setTtsState] = useState('idle'); // idle, loading, playing, error
   const audioPlaybackRef = useRef(null);
+
+  const [nearbyHospitals, setNearbyHospitals] = useState([]);
+  const [hospitalsLoading, setHospitalsLoading] = useState(false);
 
   const timerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -338,6 +342,21 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     setVerificationStep(false);
     setTriageStep('completed');
   };
+
+  useEffect(() => {
+    let active = true;
+    if (triageStep === 'completed' && urgency === 'Red') {
+      setHospitalsLoading(true);
+      getNearbyHospitalsAsync(userCoords?.latitude, userCoords?.longitude, currentPatient?.village).then(sorted => {
+        if (active) {
+          setNearbyHospitals(sorted);
+          setHospitalsLoading(false);
+        }
+      });
+    }
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triageStep, urgency]);
 
   const handlePlayAdvice = async () => {
     if (ttsState === 'loading') return;
@@ -629,6 +648,44 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
                   </div>
                 </div>
               </div>
+
+              {urgency === 'Red' && (
+                <div className="bg-[#FFF5F5] border border-red-200/80 rounded-3xl p-5 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 border-b border-red-100 pb-3">
+                    <MapPin className="w-5 h-5 text-red-600" />
+                    <h4 className="font-heading font-extrabold text-[#0A2540] text-sm">🚨 {t('nearby_emergency')}</h4>
+                  </div>
+                  <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
+                    {hospitalsLoading ? (
+                      <div className="text-center py-4 text-xs text-slate-400 flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> {t('searching_facilities')}
+                      </div>
+                    ) : nearbyHospitals.length === 0 ? (
+                      <div className="text-center py-4 text-xs text-slate-400">{t('no_facilities_found')}</div>
+                    ) : (
+                      nearbyHospitals.slice(0, 5).map((hosp, idx) => (
+                        <div key={hosp.id} className="p-3 rounded-xl border border-slate-100 bg-white flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#0A2540] text-sm truncate">{hosp.name}</span>
+                              {idx === 0 && <span className="px-1.5 py-0.5 bg-red-600 text-white text-[9px] font-black uppercase rounded shrink-0">{t('nearest') || 'Nearest'}</span>}
+                            </div>
+                            <span className="text-[10px] text-slate-500">{hosp.distance} km</span>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <a href={`tel:${hosp.phone}`} className="p-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200">
+                              <Phone className="w-3.5 h-3.5" />
+                            </a>
+                            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hosp.name + ' ' + hosp.address)}`} target="_blank" rel="noreferrer" className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg border border-slate-200">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
