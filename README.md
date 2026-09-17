@@ -10,7 +10,7 @@ AI-powered voice triage assistant for ASHA/ANM health workers in rural India —
 - **Hospital/clinic locator**: live nearby facility search (OpenStreetMap Overpass + Nominatim) on a Leaflet map, auto-surfaced for Red-urgency cases.
 - **Tamper-evident records**: each triage record is SHA-256 hashed and anchored with a simulated blockchain receipt (see `blockchain/` for the real Polygon contract + deploy path).
 - **Doctor verification workflow**: doctors review AI-extracted triage records, adjust urgency/symptoms, and send a message back to the ASHA worker.
-- **Grounded advice (RAG)**: an optional Python service (`rag/`) retrieves relevant guidance from a curated corpus and only overlays the triage advice when it finds a confident, citable match — otherwise the existing LLM/rule-based advice is left untouched. See `rag/corpus/README.md` for the corpus's current status (starter/public-knowledge, not yet clinically reviewed).
+- **Grounded advice (RAG)**: an optional Python service (`rag/`) always tries to answer, but labels how — `rag` (grounded in the corpus, with citations) or `llm` (no corpus match, general knowledge, clearly flagged as such in the UI). Retrieval is a lightweight, dependency-light TF-IDF match (no torch/embeddings) so the whole service stays well under Vercel's Python function size limit. See `rag/corpus/README.md` for the corpus's current status (starter/public-knowledge, not yet clinically reviewed).
 - **Offline-first**: works without MongoDB (falls back to local JSON files) and caches data in the browser for offline login/patient/triage access.
 
 ## Structure
@@ -44,16 +44,25 @@ The backend works with no API keys configured — MongoDB falls back to local JS
 ```bash
 cd rag
 python -m venv venv && source venv/Scripts/activate   # or venv/bin/activate on macOS/Linux
-pip install -r requirements.txt
+pip install -r requirements.txt                         # fastapi, uvicorn, numpy, python-dotenv only
 cp .env.example .env                                    # reuses OPENROUTER_API_KEY
-python ingest.py                                        # builds the FAISS index from corpus/
-python eval.py                                           # proves grounded vs correctly-rejected queries
+python ingest.py                                        # rebuilds index/chunks.json from corpus/ (already committed — only needed after editing corpus/)
+python eval.py                                           # proves grounded vs correctly-rejected queries (22/22)
 uvicorn app:app --port 8001
 ```
 
 Then set `RAG_SERVICE_URL=http://localhost:8001` in `backend/.env`. If this service isn't running,
 `/api/analyze-triage` just falls back to its existing advice — nothing else changes.
 
+`rag/index/chunks.json` is committed to the repo (not gitignored) because Vercel's Python
+functions have no build step to run `ingest.py` at deploy time — re-run it locally and commit the
+result whenever `rag/corpus/` changes.
+
 ## Deployment
 
-Both `frontend/` and `backend/` include `vercel.json` for deployment as separate Vercel projects (backend as a serverless function, frontend as a static SPA).
+`frontend/`, `backend/`, and `rag/` each include their own `vercel.json` for deployment as three
+separate Vercel projects. `rag/` deliberately avoids torch/sentence-transformers/FAISS — its
+retrieval is a hand-rolled TF-IDF implementation (`rag/tfidf.py`) using only numpy, keeping the
+deployed function around 80MB, well under Vercel's 500MB Python function limit (torch alone is
+over 1GB, which would not fit). After deploying `rag/`, set `RAG_SERVICE_URL` on the backend
+project to the RAG deployment's URL.
