@@ -10,6 +10,7 @@ const User = require('./models/User');
 const Patient = require('./models/Patient');
 const Triage = require('./models/Triage');
 const { analyzeSpokenTriage } = require('./llm/openrouter');
+const { getGroundedAdvice } = require('./llm/rag');
 const { speechToText, textToSpeech, translateToEnglish } = require('./llm/sarvam');
 
 const app = express();
@@ -723,6 +724,18 @@ app.post('/api/analyze-triage', async (req, res) => {
       return res.status(400).json({ error: 'Speech text payload is required.' });
     }
     const triageAnalysis = await analyzeSpokenTriage({ text, language });
+
+    // Optionally overlay grounded, cited advice from the RAG service. Never blocks or
+    // fails the request — if RAG is unavailable or has nothing grounded, the existing
+    // LLM/fallback advice above is left untouched.
+    const grounded = await getGroundedAdvice({ text, urgency: triageAnalysis.urgency });
+    if (grounded) {
+      triageAnalysis.advice = grounded.advice;
+      triageAnalysis.groundedSources = grounded.sources;
+    } else {
+      triageAnalysis.groundedSources = [];
+    }
+
     return res.json(triageAnalysis);
   } catch (error) {
     console.error('Speech Triage Analysis Error:', error);
