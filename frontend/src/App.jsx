@@ -197,6 +197,7 @@ function App() {
 
   const cacheUser = (userToCache) => {
     setUser(userToCache);
+    setCurrentView('dashboard');
     localStorage.setItem('asha_user', JSON.stringify(userToCache));
     setRegisteredUsers(prev => {
       const filtered = prev.filter(u => u.phone !== userToCache.phone);
@@ -316,6 +317,7 @@ function App() {
 
   const handleLogout = () => {
     setUser(null);
+    setCurrentView('dashboard');
     localStorage.removeItem('token');
     localStorage.removeItem('asha_user');
   };
