@@ -1,26 +1,24 @@
 """
-Builds the FAISS retrieval index from the markdown corpus in rag/corpus/.
+Builds rag/index/chunks.json from the markdown corpus in rag/corpus/.
 
 Each corpus file is chunked on its `## ` headings — every section becomes one
 citable chunk (`<filename> § <heading>`). Run this whenever the corpus changes:
 
     python ingest.py
 
-Produces rag/index/faiss.index (vectors) and rag/index/chunks.json (chunk
-text + citation metadata, in the same order as the vectors).
+TF-IDF vectorization happens at query time in app.py (fit once at process startup,
+cached in memory) rather than here — for a corpus this size (dozens of chunks) that
+fit is a few milliseconds, and it means this index has no binary/pickle artifacts
+that could go stale against a different scikit-learn version (important since this
+service targets both local runs and Vercel's Python runtime).
 """
 
 import json
 import re
 from pathlib import Path
 
-import faiss
-import numpy as np
-from sentence_transformers import SentenceTransformer
-
 CORPUS_DIR = Path(__file__).parent / "corpus"
 INDEX_DIR = Path(__file__).parent / "index"
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 HEADING_RE = re.compile(r"^##\s+(.*)$", re.MULTILINE)
 
@@ -56,24 +54,10 @@ def build_index():
                 "text": body,
             })
 
-    print(f"Chunked {len(doc_files)} documents into {len(chunks)} sections.")
-
-    model = SentenceTransformer(EMBEDDING_MODEL)
-    embeddings = model.encode(
-        [c["text"] for c in chunks],
-        convert_to_numpy=True,
-        normalize_embeddings=True,  # so inner product == cosine similarity
-        show_progress_bar=True,
-    ).astype("float32")
-
-    index = faiss.IndexFlatIP(embeddings.shape[1])
-    index.add(embeddings)
-
     INDEX_DIR.mkdir(exist_ok=True)
-    faiss.write_index(index, str(INDEX_DIR / "faiss.index"))
     (INDEX_DIR / "chunks.json").write_text(json.dumps(chunks, indent=2), encoding="utf-8")
 
-    print(f"Wrote index for {len(chunks)} chunks to {INDEX_DIR}")
+    print(f"Chunked {len(doc_files)} documents into {len(chunks)} sections -> {INDEX_DIR / 'chunks.json'}")
 
 
 if __name__ == "__main__":

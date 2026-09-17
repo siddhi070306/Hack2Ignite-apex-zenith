@@ -19,19 +19,19 @@ import urllib.request
 from pathlib import Path
 from typing import List, Optional
 
-import faiss
-import numpy as np
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
+
+from tfidf import TfidfIndex
 
 load_dotenv()
 
 INDEX_DIR = Path(__file__).parent / "index"
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 TOP_K = 3
-SIMILARITY_THRESHOLD = float(os.environ.get("RAG_SIMILARITY_THRESHOLD", "0.35"))
+# TF-IDF cosine similarity scores run lower than neural-embedding cosine similarity —
+# this threshold is tuned against rag/eval.py, not a generic "0.35 is always right" value.
+SIMILARITY_THRESHOLD = float(os.environ.get("RAG_SIMILARITY_THRESHOLD", "0.15"))
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemini-2.5-flash")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -45,25 +45,23 @@ DISALLOWED_DRUG_TERMS = [
 
 app = FastAPI(title="Apex Zenith RAG Advice Service")
 
-_model = None
 _index = None
 _chunks = None
 
 
-def get_model():
-    global _model
-    if _model is None:
-        _model = SentenceTransformer(EMBEDDING_MODEL)
-    return _model
-
-
-def get_index_and_chunks():
+def get_index():
+    """Lazily fit the TF-IDF index over the corpus chunks, cached in memory for the life
+    of the process. Fitting ~dozens of short chunks takes a few milliseconds, so this is
+    fine to redo on every cold start — there's no pickled model to keep in sync across
+    environments (local vs. Vercel)."""
     global _index, _chunks
     if _index is None:
-        if not (INDEX_DIR / "faiss.index").exists():
+        chunks_path = INDEX_DIR / "chunks.json"
+        if not chunks_path.exists():
             raise RuntimeError("RAG index not found — run `python ingest.py` first.")
-        _index = faiss.read_index(str(INDEX_DIR / "faiss.index"))
-        _chunks = json.loads((INDEX_DIR / "chunks.json").read_text(encoding="utf-8"))
+        _chunks = json.loads(chunks_path.read_text(encoding="utf-8"))
+        _index = TfidfIndex()
+        _index.fit([f"{c['title']} {c['text']}" for c in _chunks])
     return _index, _chunks
 
 
@@ -84,16 +82,8 @@ class AdviceResponse(BaseModel):
 
 
 def retrieve(query: str, top_k: int = TOP_K):
-    index, chunks = get_index_and_chunks()
-    model = get_model()
-    query_vec = model.encode([query], convert_to_numpy=True, normalize_embeddings=True).astype("float32")
-    scores, indices = index.search(query_vec, top_k)
-    results = []
-    for score, idx in zip(scores[0], indices[0]):
-        if idx == -1:
-            continue
-        results.append({**chunks[idx], "score": float(score)})
-    return results
+    index, chunks = get_index()
+    return [{**chunks[i], "score": score} for i, score in index.search(query, top_k)]
 
 
 def strip_disallowed_medicines(text: str) -> str:
@@ -199,7 +189,7 @@ def get_advice(req: AdviceRequest):
 @app.get("/health")
 def health():
     try:
-        get_index_and_chunks()
-        return {"status": "online", "index": "loaded"}
+        _, chunks = get_index()
+        return {"status": "online", "index": "loaded", "chunks": len(chunks)}
     except Exception as e:
         return {"status": "online", "index": "missing", "detail": str(e)}

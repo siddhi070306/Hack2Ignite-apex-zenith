@@ -26,6 +26,3 @@ Thumbs.db
 backend/users.json
 backend/patients.json
 backend/triage.json
-
-# generated RAG index (rebuilt via rag/ingest.py)
-rag/index/

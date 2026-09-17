@@ -7,9 +7,10 @@ health concern. Approach with empathy, listen without judgment, and encourage th
 support from a health worker or counselor.
 
 ## Signs requiring urgent attention
-Any expression of intent to harm oneself or others, or a specific plan to do so, is a mental health
-emergency. Do not leave the person alone, remove access to obvious means of harm if safe to do so,
-and arrange urgent referral to a facility with mental health support.
+Any expression of wanting to end their life, thoughts of suicide, intent to harm oneself or
+others, or a specific plan to do so, is a mental health emergency. Do not leave the person alone,
+remove access to obvious means of harm if safe to do so, and arrange urgent referral to a facility
+with mental health support.
 
 ## Acute agitation or confusion
 Sudden severe confusion, agitation, or hallucinations — especially with fever, head injury, or in

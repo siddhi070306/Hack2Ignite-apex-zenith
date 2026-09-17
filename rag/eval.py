@@ -17,6 +17,16 @@ IN_SCOPE_QUERIES = [
     "child is having convulsions and will not wake up",
     "patient has watery diarrhea and sunken eyes, very weak",
     "mild sore throat and runny nose since this morning, no fever",
+    "pregnant woman with severe headache blurred vision and swelling of the face",
+    "newborn baby is not feeding and feels very cold to touch",
+    "deep burn on the arm from boiling water",
+    "snake bite on the leg, patient having difficulty breathing",
+    "child looks very thin with swelling in both feet",
+    "high fever with severe joint pain and swelling in wrists and ankles",
+    "cough for three weeks with blood in the sputum and weight loss",
+    "elderly patient suddenly confused and drowsy since this morning",
+    "patient expressing thoughts of wanting to end their life",
+    "known diabetic patient is sweating heavily and confused",
 ]
 
 OUT_OF_SCOPE_QUERIES = [
@@ -24,6 +34,10 @@ OUT_OF_SCOPE_QUERIES = [
     "how do I reset my phone's factory settings",
     "recommend a good recipe for biryani",
     "what is the capital of France",
+    "who won the cricket match yesterday",
+    "how do I apply for a passport",
+    "best songs to listen to while driving",
+    "what time does the train to Mumbai leave",
 ]
 
 

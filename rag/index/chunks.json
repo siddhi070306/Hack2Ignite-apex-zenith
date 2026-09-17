@@ -1,0 +1,446 @@
+[
+  {
+    "doc_id": "chest_pain_cardiac",
+    "title": "High-risk chest pain features",
+    "citation": "chest_pain_cardiac \u00a7 High-risk chest pain features",
+    "text": "Chest pain described as pressure, tightness, or heaviness \u2014 especially if it radiates to the left\narm, jaw, or back, or is accompanied by sweating, nausea, or breathlessness \u2014 should be treated as\na possible cardiac emergency and referred immediately to the nearest hospital with emergency care."
+  },
+  {
+    "doc_id": "chest_pain_cardiac",
+    "title": "Immediate steps while arranging transport",
+    "citation": "chest_pain_cardiac \u00a7 Immediate steps while arranging transport",
+    "text": "Keep the patient calm and seated or in a comfortable half-reclined position. Loosen tight clothing.\nDo not make the patient walk unnecessarily or exert themselves. Arrange the fastest available\ntransport to a hospital or CHC with emergency capability; do not wait to see if the pain resolves."
+  },
+  {
+    "doc_id": "chest_pain_cardiac",
+    "title": "Lower-risk chest discomfort",
+    "citation": "chest_pain_cardiac \u00a7 Lower-risk chest discomfort",
+    "text": "Sharp, brief chest pain that changes with body position or breathing, without sweating,\nradiation, or breathlessness, is less likely to be cardiac in origin but should still be assessed\nby a Sub-Centre or ANM if it persists, to rule out other causes."
+  },
+  {
+    "doc_id": "danger_signs",
+    "title": "Unconsciousness or convulsions",
+    "citation": "danger_signs \u00a7 Unconsciousness or convulsions",
+    "text": "A patient who is unconscious, unusually drowsy and hard to wake, or has convulsions (fits/seizures)\nneeds immediate emergency referral to the nearest hospital or CHC. Do not attempt to give anything\nby mouth. Keep the patient on their side to prevent choking, and arrange transport immediately."
+  },
+  {
+    "doc_id": "danger_signs",
+    "title": "Inability to drink or feed",
+    "citation": "danger_signs \u00a7 Inability to drink or feed",
+    "text": "A patient who is unable to drink or breastfeed, or who vomits everything they are given, is showing\na danger sign and needs urgent referral. This applies especially to infants and young children."
+  },
+  {
+    "doc_id": "danger_signs",
+    "title": "Severe bleeding",
+    "citation": "danger_signs \u00a7 Severe bleeding",
+    "text": "Any severe or uncontrolled bleeding, from any site, is an emergency. Apply firm direct pressure to\nthe bleeding site with a clean cloth while arranging immediate transport to the nearest facility with\nsurgical/emergency capability."
+  },
+  {
+    "doc_id": "danger_signs",
+    "title": "Blue or grey skin color (cyanosis)",
+    "citation": "danger_signs \u00a7 Blue or grey skin color (cyanosis)",
+    "text": "Bluish or greyish discoloration of the lips, tongue, or skin indicates the body is not getting enough\noxygen. This is always an emergency requiring immediate referral, regardless of other symptoms."
+  },
+  {
+    "doc_id": "danger_signs",
+    "title": "Severe chest indrawing or grunting (children)",
+    "citation": "danger_signs \u00a7 Severe chest indrawing or grunting (children)",
+    "text": "In young children, the chest wall pulling in sharply with each breath, or audible grunting sounds\nwhile breathing, indicates severe respiratory distress and needs immediate referral."
+  },
+  {
+    "doc_id": "elderly_care",
+    "title": "Falls in the elderly",
+    "citation": "elderly_care \u00a7 Falls in the elderly",
+    "text": "A fall in an elderly person, even without obvious injury, warrants careful assessment \u2014 check for\ninability to stand/walk normally, severe pain, confusion, or head injury. Any of these needs\nreferral, as older adults are at higher risk of fractures and internal injury from falls."
+  },
+  {
+    "doc_id": "elderly_care",
+    "title": "Confusion or sudden behavior change",
+    "citation": "elderly_care \u00a7 Confusion or sudden behavior change",
+    "text": "Sudden new confusion, drowsiness, or agitation in an elderly person can indicate an underlying\ninfection (e.g. urinary tract infection), medication side effect, dehydration, or a more serious\ncondition like stroke. This is not a normal part of aging and should be assessed promptly rather\nthan dismissed."
+  },
+  {
+    "doc_id": "elderly_care",
+    "title": "Managing multiple chronic conditions",
+    "citation": "elderly_care \u00a7 Managing multiple chronic conditions",
+    "text": "Many elderly patients take multiple medications for chronic conditions. Encourage them to keep an\nup-to-date list of all medications and bring it to every health visit, and to never stop a\nprescribed medication without medical advice."
+  },
+  {
+    "doc_id": "elderly_care",
+    "title": "Pressure sores (bedsores)",
+    "citation": "elderly_care \u00a7 Pressure sores (bedsores)",
+    "text": "In bedridden elderly patients, check regularly for red or broken skin over bony areas (heels,\nhips, lower back). Reposition the patient every 2 hours where possible, and keep skin clean and\ndry. Refer if a sore is deep, infected, or not healing."
+  },
+  {
+    "doc_id": "fever_and_dehydration",
+    "title": "Assessing fever severity",
+    "citation": "fever_and_dehydration \u00a7 Assessing fever severity",
+    "text": "A fever alone, without other danger signs, is usually manageable at home or with a Sub-Centre/ANM\nvisit. Fever accompanied by lethargy, inability to feed, convulsions, or persistent high fever\n(above 102\u00b0F / 39\u00b0C) for more than 2-3 days should be referred for further assessment."
+  },
+  {
+    "doc_id": "fever_and_dehydration",
+    "title": "Home care for mild fever",
+    "citation": "fever_and_dehydration \u00a7 Home care for mild fever",
+    "text": "Keep the patient in a cool, well-ventilated area. Encourage plenty of fluids (water, buttermilk,\ncoconut water). Use a damp cloth to sponge the skin if the fever feels very high. Monitor\ntemperature and general alertness over the next 24 hours."
+  },
+  {
+    "doc_id": "fever_and_dehydration",
+    "title": "Signs of dehydration",
+    "citation": "fever_and_dehydration \u00a7 Signs of dehydration",
+    "text": "Look for: sunken eyes, dry mouth/tongue, reduced or dark urine, skin that stays pinched when\ngently pulled (poor skin turgor), and unusual thirst or lethargy. Any of these signs, especially\nin a child, indicate at least moderate dehydration."
+  },
+  {
+    "doc_id": "fever_and_dehydration",
+    "title": "Oral Rehydration Solution (ORS)",
+    "citation": "fever_and_dehydration \u00a7 Oral Rehydration Solution (ORS)",
+    "text": "For diarrhea, vomiting, or suspected dehydration without danger signs, give ORS solution\nfrequently in small sips \u2014 roughly one cup after every loose stool for an adult, or a few spoonfuls\nevery few minutes for an infant. Continue feeding/breastfeeding as normal alongside ORS. If the\npatient cannot keep ORS down, or dehydration signs worsen, refer to the Sub-Centre or CHC."
+  },
+  {
+    "doc_id": "gastrointestinal_symptoms",
+    "title": "Assessing severity",
+    "citation": "gastrointestinal_symptoms \u00a7 Assessing severity",
+    "text": "Frequent vomiting or watery diarrhea (several episodes within a few hours), especially combined\nwith dehydration signs (sunken eyes, poor skin turgor, lethargy) or blood in the stool, needs\nprompt referral to a Sub-Centre or CHC."
+  },
+  {
+    "doc_id": "gastrointestinal_symptoms",
+    "title": "Home management (no danger signs)",
+    "citation": "gastrointestinal_symptoms \u00a7 Home management (no danger signs)",
+    "text": "Continue ORS and normal feeding/breastfeeding. Avoid stopping food intake \u2014 small, frequent meals\nare better tolerated than large ones. Monitor the frequency of loose stools/vomiting and watch\nfor dehydration signs over the next 12-24 hours."
+  },
+  {
+    "doc_id": "gastrointestinal_symptoms",
+    "title": "Referral criteria",
+    "citation": "gastrointestinal_symptoms \u00a7 Referral criteria",
+    "text": "Refer if: the patient cannot keep any fluids down, there is blood in vomit or stool, symptoms\npersist beyond 24-48 hours without improvement, or any dehydration or other danger sign appears."
+  },
+  {
+    "doc_id": "home_care_mild_symptoms",
+    "title": "Cold and mild sore throat",
+    "citation": "home_care_mild_symptoms \u00a7 Cold and mild sore throat",
+    "text": "Warm saline gargles (a pinch of salt in warm water), steam inhalation, and plenty of warm fluids\nhelp relieve mild cold and sore throat symptoms. These are self-limiting and generally resolve\nwithin a few days without needing referral."
+  },
+  {
+    "doc_id": "home_care_mild_symptoms",
+    "title": "Mild body ache or tiredness",
+    "citation": "home_care_mild_symptoms \u00a7 Mild body ache or tiredness",
+    "text": "Rest, hydration, and monitoring are usually sufficient for mild, generalized body ache or\ntiredness without fever or other symptoms. Encourage the patient to report if new symptoms\ndevelop or existing ones worsen."
+  },
+  {
+    "doc_id": "home_care_mild_symptoms",
+    "title": "When mild symptoms need reassessment",
+    "citation": "home_care_mild_symptoms \u00a7 When mild symptoms need reassessment",
+    "text": "If a \"mild\" case develops fever above 102\u00b0F, breathing difficulty, persistent vomiting, or any\ngeneral danger sign, reassess and refer according to the relevant protocol rather than continuing\nhome care alone."
+  },
+  {
+    "doc_id": "immunization_and_family_planning",
+    "title": "Routine childhood immunization",
+    "citation": "immunization_and_family_planning \u00a7 Routine childhood immunization",
+    "text": "Encourage caregivers to complete the full immunization schedule on time (BCG, OPV, DPT/pentavalent,\nmeasles-rubella, and boosters as per the national schedule). Mild fever or soreness at the\ninjection site after vaccination is normal and can be managed with rest and fluids; a very high\nfever, persistent crying, swelling, or a fit after vaccination should be reported and assessed."
+  },
+  {
+    "doc_id": "immunization_and_family_planning",
+    "title": "Missed doses",
+    "citation": "immunization_and_family_planning \u00a7 Missed doses",
+    "text": "A missed or delayed vaccine dose does not mean starting the schedule over \u2014 advise catching up on\nmissed doses at the next available session rather than skipping them."
+  },
+  {
+    "doc_id": "immunization_and_family_planning",
+    "title": "Family planning counseling",
+    "citation": "immunization_and_family_planning \u00a7 Family planning counseling",
+    "text": "Provide accurate information on available family planning methods and refer to a health worker or\nfacility for method selection based on the individual's health and preferences. Respect the\nperson's choice and avoid pressuring any particular method."
+  },
+  {
+    "doc_id": "immunization_and_family_planning",
+    "title": "Adolescent health",
+    "citation": "immunization_and_family_planning \u00a7 Adolescent health",
+    "text": "Adolescents may be hesitant to discuss health concerns openly. Create a private, non-judgmental\nspace for conversation, and refer concerns about growth, nutrition, menstrual health, or mental\nhealth to the appropriate health worker."
+  },
+  {
+    "doc_id": "injuries_and_wounds",
+    "title": "Minor cuts and wounds",
+    "citation": "injuries_and_wounds \u00a7 Minor cuts and wounds",
+    "text": "Clean the wound with clean water and mild soap, remove visible dirt, and cover with a clean\ndressing. Watch for signs of infection (increasing redness, swelling, warmth, pus, or fever) over\nthe following days."
+  },
+  {
+    "doc_id": "injuries_and_wounds",
+    "title": "Severe bleeding wounds",
+    "citation": "injuries_and_wounds \u00a7 Severe bleeding wounds",
+    "text": "Apply firm, direct pressure with a clean cloth and keep the injured part elevated if possible. Do\nnot remove an embedded object \u2014 stabilize it in place and refer immediately. Severe or\nuncontrolled bleeding is always an emergency."
+  },
+  {
+    "doc_id": "injuries_and_wounds",
+    "title": "Burns",
+    "citation": "injuries_and_wounds \u00a7 Burns",
+    "text": "Cool a burn immediately with clean, cool (not ice-cold) running water for at least 10-20 minutes.\nDo not apply toothpaste, oil, or other home remedies. Cover loosely with a clean, non-stick\ndressing. Refer to a facility if the burn is large, deep, on the face/hands/genitals, or shows\nsigns of infection."
+  },
+  {
+    "doc_id": "injuries_and_wounds",
+    "title": "Suspected fractures",
+    "citation": "injuries_and_wounds \u00a7 Suspected fractures",
+    "text": "Immobilize the injured limb in the position found using a splint or firm support, and avoid\nmoving the patient unnecessarily. Refer to a facility with X-ray/orthopedic capability, especially\nif there is visible deformity, inability to bear weight, or the bone is exposed."
+  },
+  {
+    "doc_id": "injuries_and_wounds",
+    "title": "Head injury",
+    "citation": "injuries_and_wounds \u00a7 Head injury",
+    "text": "Any head injury with loss of consciousness (even brief), repeated vomiting, confusion, unequal\npupil size, or a fit needs immediate referral for emergency assessment."
+  },
+  {
+    "doc_id": "malnutrition",
+    "title": "Recognizing severe acute malnutrition (SAM)",
+    "citation": "malnutrition \u00a7 Recognizing severe acute malnutrition (SAM)",
+    "text": "Visible severe wasting (very thin arms/legs, loose skin folds), bilateral pitting edema (swelling)\nof both feet, or a mid-upper arm circumference (MUAC) below the severe threshold for age are signs\nof severe acute malnutrition. These children need urgent referral to a nutrition rehabilitation\nfacility or hospital, as they are at high risk of complications."
+  },
+  {
+    "doc_id": "malnutrition",
+    "title": "Moderate acute malnutrition (MAM)",
+    "citation": "malnutrition \u00a7 Moderate acute malnutrition (MAM)",
+    "text": "Children who are thin but without the severe danger signs above may be managed with supplementary\nfeeding and close growth monitoring at the Sub-Centre/Anganwadi level, with referral if they do not\nimprove or develop danger signs."
+  },
+  {
+    "doc_id": "malnutrition",
+    "title": "General feeding advice",
+    "citation": "malnutrition \u00a7 General feeding advice",
+    "text": "Encourage age-appropriate feeding: exclusive breastfeeding until 6 months, then timely introduction\nof nutrient-dense complementary foods alongside continued breastfeeding up to 2 years. Frequent\nsmall meals are better tolerated by malnourished children than large infrequent ones."
+  },
+  {
+    "doc_id": "malnutrition",
+    "title": "When to refer immediately",
+    "citation": "malnutrition \u00a7 When to refer immediately",
+    "text": "Any malnourished child who also shows danger signs (unable to feed, lethargy, convulsions, severe\ndehydration, or breathing difficulty) needs emergency referral regardless of the malnutrition\ngrading above."
+  },
+  {
+    "doc_id": "maternal_health",
+    "title": "Danger signs during pregnancy",
+    "citation": "maternal_health \u00a7 Danger signs during pregnancy",
+    "text": "Severe headache with blurred vision, swelling of the face/hands, high blood pressure, vaginal\nbleeding, severe abdominal pain, reduced or absent fetal movement, high fever, or convulsions in a\npregnant woman are all emergencies requiring immediate referral to a facility with obstetric care."
+  },
+  {
+    "doc_id": "maternal_health",
+    "title": "Labor danger signs",
+    "citation": "maternal_health \u00a7 Labor danger signs",
+    "text": "Prolonged labor (more than 12 hours), heavy bleeding before or after delivery, retained placenta,\ncord prolapse, or the baby not descending normally all require urgent referral to a hospital with\ndelivery/surgical capability."
+  },
+  {
+    "doc_id": "maternal_health",
+    "title": "Postpartum danger signs",
+    "citation": "maternal_health \u00a7 Postpartum danger signs",
+    "text": "Heavy bleeding after delivery (soaking more than one pad per hour), high fever, foul-smelling\nvaginal discharge, severe abdominal pain, or convulsions within 6 weeks after delivery are\nemergencies requiring immediate referral."
+  },
+  {
+    "doc_id": "maternal_health",
+    "title": "Routine antenatal care",
+    "citation": "maternal_health \u00a7 Routine antenatal care",
+    "text": "Encourage regular antenatal check-ups, iron/folic acid supplementation as prescribed by a health\nworker, tetanus immunization per schedule, and a balanced diet. Advise the woman to plan delivery\nat a health facility rather than at home where possible."
+  },
+  {
+    "doc_id": "mental_health_first_aid",
+    "title": "Recognizing distress",
+    "citation": "mental_health_first_aid \u00a7 Recognizing distress",
+    "text": "Persistent sadness, withdrawal from usual activities, significant changes in sleep or appetite, or\nexpressions of hopelessness lasting more than two weeks may indicate depression or another mental\nhealth concern. Approach with empathy, listen without judgment, and encourage the person to seek\nsupport from a health worker or counselor."
+  },
+  {
+    "doc_id": "mental_health_first_aid",
+    "title": "Signs requiring urgent attention",
+    "citation": "mental_health_first_aid \u00a7 Signs requiring urgent attention",
+    "text": "Any expression of wanting to end their life, thoughts of suicide, intent to harm oneself or\nothers, or a specific plan to do so, is a mental health emergency. Do not leave the person alone,\nremove access to obvious means of harm if safe to do so, and arrange urgent referral to a facility\nwith mental health support."
+  },
+  {
+    "doc_id": "mental_health_first_aid",
+    "title": "Acute agitation or confusion",
+    "citation": "mental_health_first_aid \u00a7 Acute agitation or confusion",
+    "text": "Sudden severe confusion, agitation, or hallucinations \u2014 especially with fever, head injury, or in\nsomeone with a known chronic illness \u2014 may have an underlying physical cause and needs prompt\nmedical assessment rather than being assumed to be purely psychological."
+  },
+  {
+    "doc_id": "mental_health_first_aid",
+    "title": "Supporting caregivers",
+    "citation": "mental_health_first_aid \u00a7 Supporting caregivers",
+    "text": "Caregivers of chronically ill or disabled family members are also at risk of stress and burnout.\nEncourage they seek support for themselves as well, and connect them with community resources\nwhere available."
+  },
+  {
+    "doc_id": "newborn_care",
+    "title": "Newborn danger signs",
+    "citation": "newborn_care \u00a7 Newborn danger signs",
+    "text": "Any of the following in a baby under 28 days old needs immediate referral: not feeding at all,\nconvulsions, very fast or very slow breathing, severe chest indrawing, temperature that feels very\nhot or very cold to touch, yellow discoloration of skin/eyes (jaundice) especially in the first 24\nhours or spreading to arms/legs, or the baby is unusually floppy or unresponsive."
+  },
+  {
+    "doc_id": "newborn_care",
+    "title": "Cord care",
+    "citation": "newborn_care \u00a7 Cord care",
+    "text": "Keep the umbilical cord stump clean and dry. Do not apply any substances, oils, or powders to the\ncord. Fold the diaper below the cord stump. Seek care if the cord area becomes red, swollen, or\nstarts discharging pus or has a foul smell."
+  },
+  {
+    "doc_id": "newborn_care",
+    "title": "Warmth and breastfeeding",
+    "citation": "newborn_care \u00a7 Warmth and breastfeeding",
+    "text": "Keep the newborn warm with skin-to-skin contact and appropriate wrapping, especially in the first\nhours after birth. Encourage exclusive breastfeeding from within the first hour of life, with no\nother foods or liquids for the first six months, unless a health worker advises otherwise."
+  },
+  {
+    "doc_id": "newborn_care",
+    "title": "Low birth weight babies",
+    "citation": "newborn_care \u00a7 Low birth weight babies",
+    "text": "Babies born very small or premature need extra warmth (skin-to-skin/kangaroo care), more frequent\nbreastfeeding, and closer monitoring for danger signs. Refer for specialist newborn care if\navailable."
+  },
+  {
+    "doc_id": "non_communicable_diseases",
+    "title": "Hypertension danger signs",
+    "citation": "non_communicable_diseases \u00a7 Hypertension danger signs",
+    "text": "A known hypertensive patient with severe headache, chest pain, confusion, blurred vision, or\ndifficulty speaking may be having a hypertensive emergency or stroke and needs immediate referral.\nRoutine elevated blood pressure without these symptoms should still be followed up with an ANM or\ndoctor for medication review."
+  },
+  {
+    "doc_id": "non_communicable_diseases",
+    "title": "Diabetes danger signs",
+    "citation": "non_communicable_diseases \u00a7 Diabetes danger signs",
+    "text": "Signs of very high blood sugar include excessive thirst, frequent urination, confusion, rapid\nbreathing, or a fruity-smelling breath \u2014 these need urgent referral. Signs of very low blood sugar\n(common in patients on diabetes medication) include sudden sweating, shakiness, confusion, or\nloss of consciousness; if the patient is conscious and able to swallow, give a sugary drink or food\nimmediately while arranging transport."
+  },
+  {
+    "doc_id": "non_communicable_diseases",
+    "title": "Stroke warning signs (F.A.S.T.)",
+    "citation": "non_communicable_diseases \u00a7 Stroke warning signs (F.A.S.T.)",
+    "text": "Face drooping on one side, Arm weakness on one side, Speech difficulty or slurring, and Time to\ncall for emergency transport immediately \u2014 any one of these signs, even if it resolves quickly,\nneeds urgent hospital assessment."
+  },
+  {
+    "doc_id": "non_communicable_diseases",
+    "title": "General chronic disease follow-up",
+    "citation": "non_communicable_diseases \u00a7 General chronic disease follow-up",
+    "text": "Encourage patients with known hypertension, diabetes, or heart disease to continue their prescribed\nmedications and attend regular follow-up visits, rather than stopping treatment when they feel\nwell."
+  },
+  {
+    "doc_id": "referral_criteria",
+    "title": "When to refer to a District Hospital / CHC immediately (Red)",
+    "citation": "referral_criteria \u00a7 When to refer to a District Hospital / CHC immediately (Red)",
+    "text": "Any general danger sign (unconsciousness, convulsions, inability to drink/feed, severe bleeding,\ncyanosis, severe chest indrawing), suspected cardiac emergency, or severe respiratory distress\nwarrants immediate referral to a facility with emergency and, where possible, ambulance capability."
+  },
+  {
+    "doc_id": "referral_criteria",
+    "title": "When a Sub-Centre / ANM visit within 24 hours is appropriate (Yellow)",
+    "citation": "referral_criteria \u00a7 When a Sub-Centre / ANM visit within 24 hours is appropriate (Yellow)",
+    "text": "Persistent fever without danger signs, moderate dehydration responding to ORS, mild-to-moderate\nbreathlessness without red-flag features, or symptoms that are not improving after a day of home\ncare are appropriately managed with a Sub-Centre or ANM assessment rather than an emergency\nreferral."
+  },
+  {
+    "doc_id": "referral_criteria",
+    "title": "When home care and monitoring is sufficient (Green)",
+    "citation": "referral_criteria \u00a7 When home care and monitoring is sufficient (Green)",
+    "text": "Mild, self-limiting symptoms \u2014 a mild cold, sore throat, or low-grade fever without any danger\nsigns \u2014 can usually be managed at home with rest, fluids, and monitoring, with a follow-up if\nsymptoms worsen or do not resolve within a few days."
+  },
+  {
+    "doc_id": "respiratory_distress",
+    "title": "Recognizing breathing difficulty",
+    "citation": "respiratory_distress \u00a7 Recognizing breathing difficulty",
+    "text": "Fast breathing, visible effort with each breath, chest indrawing, wheezing, or the patient\nstruggling to speak full sentences due to breathlessness are all signs of respiratory distress.\nThis is considered a high-risk symptom, particularly when it comes on suddenly or is worsening."
+  },
+  {
+    "doc_id": "respiratory_distress",
+    "title": "When it is an emergency (Red)",
+    "citation": "respiratory_distress \u00a7 When it is an emergency (Red)",
+    "text": "Severe breathlessness at rest, chest indrawing, grunting, blue/grey lips or skin, or breathlessness\ncombined with chest pain or altered consciousness require immediate emergency referral and\ntransport to a facility capable of oxygen support."
+  },
+  {
+    "doc_id": "respiratory_distress",
+    "title": "Moderate respiratory symptoms (Yellow)",
+    "citation": "respiratory_distress \u00a7 Moderate respiratory symptoms (Yellow)",
+    "text": "Mild breathlessness that improves with rest, a persistent cough without other danger signs, or\nbreathlessness in a patient with a known chronic condition (like asthma) who has their usual\ninhaler available may be manageable with ANM/Sub-Centre assessment within a few hours, with close\nmonitoring for worsening."
+  },
+  {
+    "doc_id": "respiratory_distress",
+    "title": "First-aid while arranging transport",
+    "citation": "respiratory_distress \u00a7 First-aid while arranging transport",
+    "text": "Keep the patient sitting upright rather than lying flat, loosen tight clothing, and keep them calm.\nDo not give food or water if breathlessness is severe, due to choking risk."
+  },
+  {
+    "doc_id": "skin_and_eye_infections",
+    "title": "Common skin infections",
+    "citation": "skin_and_eye_infections \u00a7 Common skin infections",
+    "text": "Redness, warmth, swelling, and pus in a localized area of skin suggest a bacterial skin infection.\nKeep the area clean and dry, and refer if the redness is spreading rapidly, the patient has fever,\nor the area is very painful \u2014 these suggest a more serious infection needing prompt attention."
+  },
+  {
+    "doc_id": "skin_and_eye_infections",
+    "title": "Scabies and lice",
+    "citation": "skin_and_eye_infections \u00a7 Scabies and lice",
+    "text": "Intense itching, especially at night, with small burrows or bumps between fingers, wrists, or waist\nsuggests scabies. This is manageable with treatment from a health worker; encourage treating all\nhousehold members simultaneously and washing bedding/clothing to prevent reinfection."
+  },
+  {
+    "doc_id": "skin_and_eye_infections",
+    "title": "Conjunctivitis (red eye)",
+    "citation": "skin_and_eye_infections \u00a7 Conjunctivitis (red eye)",
+    "text": "Redness, discharge, and irritation in one or both eyes without vision loss is usually simple\nconjunctivitis. Advise gentle cleaning with clean water and avoiding touching/rubbing the eyes.\nRefer if there is significant pain, vision changes, marked light sensitivity, or the discharge\npersists beyond a few days."
+  },
+  {
+    "doc_id": "skin_and_eye_infections",
+    "title": "Eye injury or foreign body",
+    "citation": "skin_and_eye_infections \u00a7 Eye injury or foreign body",
+    "text": "Do not attempt to remove an embedded foreign object from the eye. Cover loosely and refer\nimmediately. Any chemical splash to the eye should be rinsed with clean water for several minutes\nbefore urgent referral."
+  },
+  {
+    "doc_id": "snake_bite_and_poisoning",
+    "title": "Snake bite first aid",
+    "citation": "snake_bite_and_poisoning \u00a7 Snake bite first aid",
+    "text": "Keep the patient calm and still to slow venom spread. Immobilize the bitten limb, keeping it below\nheart level if possible. Remove tight clothing/jewellery near the bite before swelling starts. Do\nNOT cut the wound, apply a tourniquet, try to suck out venom, or apply ice. Arrange immediate\ntransport to a facility that stocks anti-snake-venom."
+  },
+  {
+    "doc_id": "snake_bite_and_poisoning",
+    "title": "Danger signs after a snake bite",
+    "citation": "snake_bite_and_poisoning \u00a7 Danger signs after a snake bite",
+    "text": "Difficulty breathing, drooping eyelids or blurred vision, difficulty swallowing, bleeding from\ngums/nose, dark urine, or spreading swelling are all signs of severe envenomation requiring\nemergency transport, even if the patient initially looks well."
+  },
+  {
+    "doc_id": "snake_bite_and_poisoning",
+    "title": "Suspected poisoning (ingestion)",
+    "citation": "snake_bite_and_poisoning \u00a7 Suspected poisoning (ingestion)",
+    "text": "Identify what was ingested if possible and bring the container/substance to the facility. Do not\ninduce vomiting unless specifically advised by a health professional, as some substances cause\nmore harm coming back up. Keep the patient calm and arrange immediate transport."
+  },
+  {
+    "doc_id": "snake_bite_and_poisoning",
+    "title": "Insect and scorpion stings",
+    "citation": "snake_bite_and_poisoning \u00a7 Insect and scorpion stings",
+    "text": "Most insect stings can be managed with a cold compress and monitoring. Refer immediately if there\nis difficulty breathing, facial/throat swelling, widespread rash, or dizziness \u2014 these may indicate\na severe allergic reaction."
+  },
+  {
+    "doc_id": "tuberculosis",
+    "title": "Recognizing possible TB",
+    "citation": "tuberculosis \u00a7 Recognizing possible TB",
+    "text": "Cough lasting more than 2 weeks, especially with blood-streaked sputum, unexplained weight loss,\npersistent low-grade fever (often worse in the evening), and night sweats are classic warning signs\nof pulmonary tuberculosis. Any patient with these symptoms should be referred for sputum testing or\nchest X-ray at the earliest opportunity."
+  },
+  {
+    "doc_id": "tuberculosis",
+    "title": "Referral and testing",
+    "citation": "tuberculosis \u00a7 Referral and testing",
+    "text": "Refer suspected TB cases to the nearest facility offering free TB testing (sputum microscopy or\nmolecular testing) under the national TB program. Early diagnosis significantly improves outcomes\nand reduces transmission risk to household members."
+  },
+  {
+    "doc_id": "tuberculosis",
+    "title": "Supporting a diagnosed TB patient",
+    "citation": "tuberculosis \u00a7 Supporting a diagnosed TB patient",
+    "text": "Encourage strict adherence to the full course of treatment, even after symptoms improve, since\nincomplete treatment risks drug-resistant TB. Advise good ventilation at home and covering the\nmouth while coughing to reduce household transmission risk."
+  },
+  {
+    "doc_id": "tuberculosis",
+    "title": "When TB symptoms become an emergency",
+    "citation": "tuberculosis \u00a7 When TB symptoms become an emergency",
+    "text": "Coughing up large amounts of blood, severe breathlessness, or high fever with confusion in a known\nor suspected TB patient requires urgent referral to a hospital."
+  },
+  {
+    "doc_id": "vector_borne_diseases",
+    "title": "Suspected malaria",
+    "citation": "vector_borne_diseases \u00a7 Suspected malaria",
+    "text": "Fever with chills and sweating, often cyclical, especially in a malaria-endemic area, should be\ntested for malaria at the earliest opportunity. Refer for prompt testing and treatment; delayed\ntreatment risks progression to severe malaria (confusion, convulsions, severe anemia, jaundice),\nwhich is a medical emergency."
+  },
+  {
+    "doc_id": "vector_borne_diseases",
+    "title": "Suspected dengue",
+    "citation": "vector_borne_diseases \u00a7 Suspected dengue",
+    "text": "High fever with severe headache, pain behind the eyes, joint/muscle pain, and rash should raise\nsuspicion of dengue. Warning signs requiring immediate referral include: severe abdominal pain,\npersistent vomiting, bleeding from gums/nose, black stools, restlessness, or cold/clammy skin \u2014\nthese indicate possible dengue hemorrhagic complications."
+  },
+  {
+    "doc_id": "vector_borne_diseases",
+    "title": "Suspected chikungunya",
+    "citation": "vector_borne_diseases \u00a7 Suspected chikungunya",
+    "text": "High fever with severe joint pain and swelling, often affecting hands, wrists, ankles, and feet, is\ntypical of chikungunya. It is rarely life-threatening but can cause prolonged joint pain; supportive\ncare with rest, fluids, and monitoring is generally appropriate, with referral if fever is very high\nor persistent beyond a few days."
+  },
+  {
+    "doc_id": "vector_borne_diseases",
+    "title": "General prevention advice",
+    "citation": "vector_borne_diseases \u00a7 General prevention advice",
+    "text": "Advise use of mosquito nets, elimination of standing water near the home, and use of repellents\nwhere available, regardless of which specific illness is suspected."
+  }
+]
