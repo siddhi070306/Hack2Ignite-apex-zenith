@@ -45,8 +45,8 @@ async function textToSpeech({ text, languageCode }) {
     return { error: 'Text is required for speech synthesis.' };
   }
 
-  const model = process.env.SARVAM_TTS_MODEL || 'bulbul:v2';
-  const speaker = process.env.SARVAM_TTS_SPEAKER || 'anushka';
+  const model = process.env.SARVAM_TTS_MODEL || 'bulbul:v3';
+  const speaker = process.env.SARVAM_TTS_SPEAKER || 'priya';
 
   const response = await fetch(SARVAM_TTS_URL, {
     method: 'POST',
