@@ -668,6 +668,53 @@ app.post('/api/translate', async (req, res) => {
   }
 });
 
+// PUT /api/triage/:id/verify - doctor verification + message
+app.put('/api/triage/:id/verify', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { verifiedBy, doctorUrgency, doctorSymptoms, doctorMessage } = req.body;
+
+    if (!verifiedBy) {
+      return res.status(400).json({ error: 'Doctor name (verifiedBy) is required.' });
+    }
+
+    if (isMongoConnected) {
+      const triage = await Triage.findById(id);
+      if (!triage) return res.status(404).json({ error: 'Triage record not found' });
+
+      triage.doctorVerificationStatus = 'verified';
+      triage.verifiedBy = verifiedBy;
+      triage.verifiedAt = new Date();
+      if (doctorUrgency) triage.doctorUrgency = doctorUrgency;
+      if (doctorSymptoms) triage.doctorSymptoms = doctorSymptoms;
+      if (doctorMessage !== undefined) triage.doctorMessage = doctorMessage;
+
+      await triage.save();
+      const obj = triage.toObject();
+      return res.json({ ...obj, id: obj._id.toString() });
+    }
+
+    const records = getJsonData(TRIAGE_FILE);
+    const index = records.findIndex(r => r.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Triage record not found' });
+
+    records[index] = {
+      ...records[index],
+      doctorVerificationStatus: 'verified',
+      verifiedBy,
+      verifiedAt: new Date().toISOString(),
+      doctorUrgency: doctorUrgency || records[index].doctorUrgency || records[index].urgency,
+      doctorSymptoms: doctorSymptoms || records[index].doctorSymptoms || records[index].symptoms,
+      doctorMessage: doctorMessage !== undefined ? doctorMessage : (records[index].doctorMessage || '')
+    };
+    saveJsonData(TRIAGE_FILE, records);
+    return res.json(records[index]);
+  } catch (error) {
+    console.error('Verify Triage Error:', error);
+    res.status(500).json({ error: 'Failed to verify triage record' });
+  }
+});
+
 // POST /api/analyze-triage - OpenRouter LLM voice triage engine
 app.post('/api/analyze-triage', async (req, res) => {
   try {
