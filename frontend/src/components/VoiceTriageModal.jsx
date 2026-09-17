@@ -296,7 +296,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     }
   };
 
-  const finishTriageAnalysis = (finalText) => {
+  const finishTriageAnalysis = async (finalText) => {
     const textToAnalyze = (finalText || transcriptRef.current || transcript || '').trim();
     if (!textToAnalyze) {
       setTriageStep('idle');
@@ -306,14 +306,33 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     setSpeechNotice('');
     setTranscript(textToAnalyze);
     transcriptRef.current = textToAnalyze;
+    setTriageStep('analyzing');
 
-    const result = analyzeClinicalText(textToAnalyze, selectedLanguage);
-    setUrgency(result.urgency);
-    setSymptoms(result.symptoms);
+    let result;
+    try {
+      const selectedLangObj = INDIAN_LANGUAGES.find(l => l.code === selectedLanguage);
+      const res = await fetch(`${API_BASE_URL}/api/analyze-triage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textToAnalyze, language: selectedLangObj ? selectedLangObj.sarvamCode : `${selectedLanguage}-IN` })
+      });
+      const data = await res.json();
+      if (res.ok && data && data.urgency) {
+        result = data;
+      } else {
+        result = analyzeClinicalText(textToAnalyze, selectedLanguage);
+      }
+    } catch (err) {
+      console.warn('Backend triage analysis unreachable, using local fallback:', err);
+      result = analyzeClinicalText(textToAnalyze, selectedLanguage);
+    }
+
+    setUrgency(result.urgency || 'Green');
+    setSymptoms(result.symptoms || []);
     setKeywords(result.keywords || []);
-    setAdvice(result.advice);
-    setTranslation(result.translation);
-    setEditableSymptoms(result.symptoms);
+    setAdvice(result.advice || '');
+    setTranslation(result.translation || textToAnalyze);
+    setEditableSymptoms(result.symptoms || []);
     setVerificationStep(false);
     setTriageStep('completed');
   };
