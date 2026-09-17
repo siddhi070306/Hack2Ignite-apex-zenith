@@ -148,6 +148,7 @@ export const translations = {
     confirm_triage_btn: 'Confirm Verification',
     source_label: 'Source',
     llm_ungrounded_label: 'AI-generated — not from verified guidance',
+    silence_detected: 'Detected silence — wrapping up recording...',
   },
   hi: {
     app_title: 'आशा साथी',
@@ -295,6 +296,7 @@ export const translations = {
     confirm_triage_btn: 'सत्यापन की पुष्टि करें',
     source_label: 'स्रोत',
     llm_ungrounded_label: 'एआई-जनित — सत्यापित मार्गदर्शन से नहीं',
+    silence_detected: 'खामोशी का पता चला — रिकॉर्डिंग समाप्त की जा रही है...',
   },
   mr: {
     app_title: 'आशा साथी',
@@ -442,5 +444,6 @@ export const translations = {
     confirm_triage_btn: 'पडताळणीची पुष्टी करा',
     source_label: 'स्रोत',
     llm_ungrounded_label: 'एआय-निर्मित — सत्यापित मार्गदर्शनातून नाही',
+    silence_detected: 'शांतता आढळली — रेकॉर्डिंग संपवत आहे...',
   },
 };

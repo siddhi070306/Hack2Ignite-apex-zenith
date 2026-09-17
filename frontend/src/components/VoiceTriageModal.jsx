@@ -90,11 +90,88 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   const [anchoringLogs, setAnchoringLogs] = useState('');
   const [calculatedHash, setCalculatedHash] = useState('');
 
+  const [nearingAutoStop, setNearingAutoStop] = useState(false);
+  const [sttProvider, setSttProvider] = useState(''); // 'web-speech' | 'sarvam' | ''
+
   const timerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const speechRecognitionRef = useRef(null);
   const transcriptRef = useRef('');
+  const interimStabilityRef = useRef({ lastTail: '', stableCount: 0 });
+  const audioContextRef = useRef(null);
+  const vadIntervalRef = useRef(null);
+  const vadStateRef = useRef({ speechDetected: false, silenceStartedAt: null });
+  const isRecordingRef = useRef(false); // ref (not state) so the VAD interval's stale closure sees live status
+
+  // Sustained silence (ms) after speech was detected before auto-stopping the recording.
+  // Deliberately conservative for a clinical tool — better to run a couple seconds long
+  // than to truncate a symptom description. Manual stop always works immediately regardless.
+  const AUTO_STOP_SILENCE_MS = 2200;
+  const SPEECH_RMS_THRESHOLD = 0.02;
+
+  const stopVad = () => {
+    if (vadIntervalRef.current) {
+      clearInterval(vadIntervalRef.current);
+      vadIntervalRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch (e) {}
+      audioContextRef.current = null;
+    }
+    setNearingAutoStop(false);
+  };
+
+  // Lightweight, browser-only voice activity detection: polls mic volume (RMS) and
+  // auto-stops the recording after sustained silence following detected speech. Not a
+  // real VAD model — just enough to reduce truncated/over-long recordings without adding
+  // a dependency. Falls back silently (manual stop only) if AudioContext isn't available.
+  const startVad = (stream) => {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      vadStateRef.current = { speechDetected: false, silenceStartedAt: null };
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      vadIntervalRef.current = setInterval(() => {
+        analyser.getByteTimeDomainData(dataArray);
+        let sumSquares = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          const normalized = (dataArray[i] - 128) / 128;
+          sumSquares += normalized * normalized;
+        }
+        const rms = Math.sqrt(sumSquares / dataArray.length);
+        const isSpeech = rms > SPEECH_RMS_THRESHOLD;
+        const state = vadStateRef.current;
+
+        if (isSpeech) {
+          state.speechDetected = true;
+          state.silenceStartedAt = null;
+          setNearingAutoStop(false);
+        } else if (state.speechDetected) {
+          if (state.silenceStartedAt === null) {
+            state.silenceStartedAt = Date.now();
+          } else {
+            const silenceMs = Date.now() - state.silenceStartedAt;
+            setNearingAutoStop(silenceMs > 800);
+            if (silenceMs > AUTO_STOP_SILENCE_MS) {
+              stopVad();
+              stopRecording();
+            }
+          }
+        }
+      }, 200);
+    } catch (err) {
+      console.warn('VAD setup failed, falling back to manual stop only:', err);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -110,6 +187,9 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
       setCalculatedHash('');
       setGroundedSources([]);
       setAdviceSource(null);
+      setSttProvider('');
+      isRecordingRef.current = false;
+      stopVad();
       if (timerRef.current) clearInterval(timerRef.current);
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         try { mediaRecorderRef.current.stop(); } catch (e) {}
@@ -162,6 +242,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   };
 
   const startRecording = async () => {
+    isRecordingRef.current = true;
     setTriageStep('recording');
     setRecordingSeconds(0);
     setTranscript('');
@@ -213,16 +294,19 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
           if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
         };
         mediaRecorder.start(200);
+        startVad(mediaStream);
       }
     } catch (err) {
       console.error('Microphone getUserMedia error:', err);
       if (!transcriptRef.current) {
         const errName = err.name || 'MicrophoneError';
         if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+          isRecordingRef.current = false;
           setTriageStep('idle');
           setSpeechNotice('⚠️ Microphone permission denied by browser. Please allow microphone access in site settings.');
           if (timerRef.current) clearInterval(timerRef.current);
         } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+          isRecordingRef.current = false;
           setTriageStep('idle');
           setSpeechNotice('⚠️ Microphone is currently in use by another app. Please close other voice apps.');
           if (timerRef.current) clearInterval(timerRef.current);
@@ -232,7 +316,10 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   };
 
   const stopRecording = () => {
+    if (!isRecordingRef.current) return; // guards against VAD auto-stop racing a manual click
+    isRecordingRef.current = false;
     if (timerRef.current) clearInterval(timerRef.current);
+    stopVad();
     setTriageStep('analyzing');
 
     if (speechRecognitionRef.current) {
@@ -627,7 +714,11 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
                   <span className="font-bold text-[#E07A5F]">{t('live_preview')}: </span>"{transcript}"
                 </div>
               )}
-              <p className="text-xs text-slate-400 mt-2 italic">{t('capturing_mic')}</p>
+              {nearingAutoStop ? (
+                <p className="text-xs text-amber-600 mt-2 font-semibold">{t('silence_detected')}</p>
+              ) : (
+                <p className="text-xs text-slate-400 mt-2 italic">{t('capturing_mic')}</p>
+              )}
             </div>
           )}
 
