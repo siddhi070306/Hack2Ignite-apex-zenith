@@ -10,11 +10,23 @@ export default function Dashboard({ user, patientsCount, triageHistory = [], set
   const triagesTodayCount = triageHistory.filter(item => new Date(item.createdAt || item.date).toDateString() === today).length;
   const redAlertsCount = triageHistory.filter(item => (item.doctorUrgency || item.urgency) === 'Red').length;
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  // Compare as plain YYYY-MM-DD date strings rather than Date objects — a date-only
+  // string like "2026-09-17" parses as UTC midnight, which in a positive-UTC-offset
+  // timezone (e.g. India, UTC+5:30) is already "tomorrow" locally, silently hiding a
+  // same-day follow-up until the next calendar day. String comparison sidesteps that
+  // entirely since neither side goes through timezone-sensitive Date parsing.
+  const todayStr = new Date().toLocaleDateString('en-CA'); // en-CA formats as YYYY-MM-DD
   const followUpsDue = triageHistory
-    .filter(item => item.followUpDate && !item.followUpDone && new Date(item.followUpDate) <= startOfToday)
-    .sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate));
+    .filter(item => item.followUpDate && !item.followUpDone && item.followUpDate.slice(0, 10) <= todayStr)
+    .sort((a, b) => a.followUpDate.slice(0, 10).localeCompare(b.followUpDate.slice(0, 10)));
+
+  // A follow-up date has no meaningful time component — format it directly from its
+  // Y/M/D parts (local Date constructor, not the UTC-parsing ISO-string one) so it never
+  // shows a misleading time like "05:30 am" for what's just a date.
+  const formatFollowUpDate = (dateStr) => {
+    const [y, m, d] = dateStr.slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
 
   return (
     <div className="space-y-6">
@@ -86,7 +98,7 @@ export default function Dashboard({ user, patientsCount, triageHistory = [], set
               <div key={item.id} className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3">
                 <div onClick={() => setSelectedHistoryItem(item)} className="cursor-pointer">
                   <h4 className="font-bold text-[#0A2540] text-sm">{item.patientName}</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">{t('schedule_followup')}: {formatDateTime(item.followUpDate)}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{t('schedule_followup')}: {formatFollowUpDate(item.followUpDate)}</p>
                 </div>
                 <button
                   onClick={() => onMarkFollowUpDone(item.id)}
