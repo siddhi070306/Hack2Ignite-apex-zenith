@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+venv/
+__pycache__/
+
+# build output
+dist/
+build/
+
+# env
+.env
+.env.local
+*.env
+!*.env.example
+
+# logs
+*.log
+npm-debug.log*
+
+# editor/OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# runtime data files (JSON-fallback DB)
+backend/users.json
+backend/patients.json
+backend/triage.json
