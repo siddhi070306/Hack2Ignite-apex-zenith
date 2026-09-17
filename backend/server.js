@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const User = require('./models/User');
+const Patient = require('./models/Patient');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -450,6 +451,80 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// JSON file fallback helpers for patients
+const PATIENTS_FILE = path.join(__dirname, 'patients.json');
+
+function getJsonData(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    }
+  } catch (err) {
+    console.error(`Error reading ${filePath}:`, err);
+  }
+  return [];
+}
+
+function saveJsonData(filePath, data) {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error(`Error saving ${filePath}:`, err);
+  }
+}
+
+// GET /api/patients - fetch patients
+app.get('/api/patients', async (req, res) => {
+  try {
+    if (isMongoConnected) {
+      const patients = await Patient.find().sort({ createdAt: -1 });
+      const formatted = patients.map(p => {
+        const obj = p.toObject();
+        return { ...obj, id: obj._id.toString() };
+      });
+      return res.json(formatted);
+    }
+    return res.json(getJsonData(PATIENTS_FILE));
+  } catch (error) {
+    console.error('Fetch Patients Error:', error);
+    res.status(500).json({ error: 'Failed to fetch patients' });
+  }
+});
+
+// POST /api/patients - create patient
+app.post('/api/patients', async (req, res) => {
+  try {
+    const { name, age, gender, village, phone, notes, createdBy } = req.body;
+    if (!name || !age || !gender || !village) {
+      return res.status(400).json({ error: 'Name, age, gender, and village are required.' });
+    }
+
+    if (isMongoConnected) {
+      const newPatient = new Patient({
+        name, age: Number(age), gender, village,
+        phone: phone || '', notes: notes || '', createdBy: createdBy || null
+      });
+      await newPatient.save();
+      const obj = newPatient.toObject();
+      return res.status(201).json({ ...obj, id: obj._id.toString() });
+    }
+
+    const patients = getJsonData(PATIENTS_FILE);
+    const newPatient = {
+      id: Date.now().toString(),
+      name, age: Number(age), gender, village,
+      phone: phone || '', notes: notes || '',
+      createdAt: new Date().toISOString()
+    };
+    patients.unshift(newPatient);
+    saveJsonData(PATIENTS_FILE, patients);
+    return res.status(201).json(newPatient);
+  } catch (error) {
+    console.error('Create Patient Error:', error);
+    res.status(500).json({ error: 'Failed to create patient' });
+  }
+});
+
 // GET /api/health - server & DB status check
 app.get('/api/health', (req, res) => {
   res.json({
@@ -462,7 +537,7 @@ app.get('/api/health', (req, res) => {
 const frontendBuildPath = path.join(__dirname, '../frontend/dist');
 if (fs.existsSync(frontendBuildPath)) {
   app.use(express.static(frontendBuildPath));
-  app.get('*', (req, res) => {
+  app.get('/*splat', (req, res) => {
     res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
 } else {
@@ -472,7 +547,8 @@ if (fs.existsSync(frontendBuildPath)) {
       message: 'Apex Zenith API server is running. If you are looking for the frontend interface, please visit your deployed frontend URL.',
       endpoints: {
         health: '/api/health',
-        auth: '/api/auth/*'
+        auth: '/api/auth/*',
+        patients: '/api/patients'
       }
     });
   });
