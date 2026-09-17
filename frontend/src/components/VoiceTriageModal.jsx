@@ -249,7 +249,9 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     transcriptRef.current = '';
     setTranslation('');
     setSpeechNotice('');
+    setSttProvider('');
     audioChunksRef.current = [];
+    interimStabilityRef.current = { lastTail: '', stableCount: 0 };
 
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => setRecordingSeconds(prev => prev + 1), 1000);
@@ -268,6 +270,15 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
           if (currentText) {
             setTranscript(currentText);
             transcriptRef.current = currentText;
+
+            // Stability signal: has the trailing chunk of the transcript stopped
+            // changing across the last couple of updates? A transcript that's still
+            // fluctuating right up until the user stops recording is less trustworthy.
+            const tail = currentText.trim().slice(-24);
+            const prev = interimStabilityRef.current;
+            interimStabilityRef.current = tail === prev.lastTail
+              ? { lastTail: tail, stableCount: prev.stableCount + 1 }
+              : { lastTail: tail, stableCount: 0 };
           }
         };
         recognition.onerror = (err) => console.warn('Web Speech API notice:', err.error);
@@ -328,19 +339,31 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
 
     const capturedText = (transcriptRef.current || transcript || '').trim();
 
+    // Only trust the live Web Speech transcript outright when it looked stable (the
+    // trailing words stopped changing across the last couple of updates) and isn't
+    // suspiciously short — otherwise cross-check it against Sarvam's STT, since an
+    // uncertain live transcript silently becoming "the" transcript is a real accuracy
+    // risk for a clinical tool. This costs an extra API call only in the uncertain case.
+    const { stableCount } = interimStabilityRef.current;
+    const trustWebSpeech = Boolean(capturedText) && stableCount >= 2 && capturedText.length >= 15;
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.onstop = async () => {
         if (mediaRecorderRef.current.stream) {
           mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
         }
 
-        if (capturedText) {
+        if (trustWebSpeech) {
+          setSttProvider('web-speech');
           finishTriageAnalysis(capturedText);
         } else {
           const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
           const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
           if (audioBlob.size > 0) {
             await processSarvamSTT(audioBlob);
+          } else if (capturedText) {
+            setSttProvider('web-speech');
+            finishTriageAnalysis(capturedText);
           } else {
             setTriageStep('idle');
             setSpeechNotice('⚠️ Microphone captured 0 bytes of audio. Please speak clearly into your mic.');
@@ -349,6 +372,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
       };
       try { mediaRecorderRef.current.stop(); } catch (e) { console.warn('MediaRecorder stop notice:', e); }
     } else if (capturedText) {
+      setSttProvider('web-speech');
       finishTriageAnalysis(capturedText);
     } else {
       setTriageStep('idle');
@@ -377,10 +401,12 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
         setSpeechNotice('');
         setTranscript(data.transcript);
         transcriptRef.current = data.transcript;
+        setSttProvider('sarvam');
         finishTriageAnalysis(data.transcript);
       } else {
         const textToUse = (transcriptRef.current || transcript || '').trim();
         if (textToUse) {
+          setSttProvider('web-speech');
           finishTriageAnalysis(textToUse);
         } else {
           setTriageStep('idle');
@@ -391,6 +417,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
       console.warn('Sarvam STT backend request error:', err);
       const textToUse = (transcriptRef.current || transcript || '').trim();
       if (textToUse) {
+        setSttProvider('web-speech');
         finishTriageAnalysis(textToUse);
       } else {
         setTriageStep('idle');
@@ -842,6 +869,11 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
                   <span className="text-xs font-extrabold tracking-wider uppercase text-slate-500 flex items-center gap-1.5">
                     <Volume2 className="w-3.5 h-3.5" /> {t('spoken_transcript')} & {t('english_translation')}
                   </span>
+                  {sttProvider && (
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                      {sttProvider === 'sarvam' ? 'Sarvam AI STT' : 'Web Speech API'}
+                    </span>
+                  )}
                 </div>
                 <div className="p-4 space-y-4">
                   <div>
