@@ -321,6 +321,14 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
           setTriageStep('idle');
           setSpeechNotice('⚠️ Microphone is currently in use by another app. Please close other voice apps.');
           if (timerRef.current) clearInterval(timerRef.current);
+        } else {
+          // Catch-all for any other/unrecognized error (e.g. NotFoundError, NotSupportedError,
+          // SecurityError) — without this, the UI was left stuck on the recording screen
+          // indefinitely with no feedback, found via testing in a browser with no real mic.
+          isRecordingRef.current = false;
+          setTriageStep('idle');
+          setSpeechNotice(`⚠️ Could not access the microphone (${errName}). Please check your device and try again, or use Manual Input instead.`);
+          if (timerRef.current) clearInterval(timerRef.current);
         }
       }
     }
