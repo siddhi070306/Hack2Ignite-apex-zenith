@@ -40,6 +40,11 @@ const triageSchema = new mongoose.Schema({
   coordinates: {
     latitude: Number,
     longitude: Number
+  },
+  followUpDate: Date,
+  followUpDone: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

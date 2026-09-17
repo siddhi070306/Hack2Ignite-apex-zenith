@@ -557,7 +557,7 @@ app.post('/api/triage', async (req, res) => {
     const {
       patientName, patientAge, patientGender, village, ashaName, urgency,
       symptoms, keywords, advice, transcript, translation, language, coordinates,
-      txHash, blockNumber, dataHash
+      txHash, blockNumber, dataHash, followUpDate
     } = req.body;
 
     if (!patientName || !ashaName || !urgency) {
@@ -570,7 +570,8 @@ app.post('/api/triage', async (req, res) => {
         symptoms: symptoms || [], keywords: keywords || [], advice: advice || '',
         transcript: transcript || '', translation: translation || '', language: language || '',
         coordinates: coordinates || null,
-        txHash: txHash || '', blockNumber: blockNumber || null, dataHash: dataHash || ''
+        txHash: txHash || '', blockNumber: blockNumber || null, dataHash: dataHash || '',
+        followUpDate: followUpDate || null, followUpDone: false
       });
       await newTriage.save();
       const obj = newTriage.toObject();
@@ -585,6 +586,7 @@ app.post('/api/triage', async (req, res) => {
       transcript: transcript || '', translation: translation || '', language: language || '',
       coordinates: coordinates || null,
       txHash: txHash || '', blockNumber: blockNumber || null, dataHash: dataHash || '',
+      followUpDate: followUpDate || null, followUpDone: false,
       doctorVerificationStatus: 'pending',
       createdAt: new Date().toISOString()
     };
@@ -720,6 +722,35 @@ app.put('/api/triage/:id/verify', async (req, res) => {
   } catch (error) {
     console.error('Verify Triage Error:', error);
     res.status(500).json({ error: 'Failed to verify triage record' });
+  }
+});
+
+// PUT /api/triage/:id/followup - mark a scheduled follow-up as done
+app.put('/api/triage/:id/followup', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { followUpDone } = req.body;
+
+    if (isMongoConnected) {
+      const triage = await Triage.findById(id);
+      if (!triage) return res.status(404).json({ error: 'Triage record not found' });
+
+      triage.followUpDone = followUpDone !== false;
+      await triage.save();
+      const obj = triage.toObject();
+      return res.json({ ...obj, id: obj._id.toString() });
+    }
+
+    const records = getJsonData(TRIAGE_FILE);
+    const index = records.findIndex(r => r.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Triage record not found' });
+
+    records[index] = { ...records[index], followUpDone: followUpDone !== false };
+    saveJsonData(TRIAGE_FILE, records);
+    return res.json(records[index]);
+  } catch (error) {
+    console.error('Follow-up Update Error:', error);
+    res.status(500).json({ error: 'Failed to update follow-up status' });
   }
 });
 
