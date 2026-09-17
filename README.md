@@ -10,6 +10,7 @@ AI-powered voice triage assistant for ASHA/ANM health workers in rural India —
 - **Hospital/clinic locator**: live nearby facility search (OpenStreetMap Overpass + Nominatim) on a Leaflet map, auto-surfaced for Red-urgency cases.
 - **Tamper-evident records**: each triage record is SHA-256 hashed and anchored with a simulated blockchain receipt (see `blockchain/` for the real Polygon contract + deploy path).
 - **Doctor verification workflow**: doctors review AI-extracted triage records, adjust urgency/symptoms, and send a message back to the ASHA worker.
+- **Grounded advice (RAG)**: an optional Python service (`rag/`) retrieves relevant guidance from a curated corpus and only overlays the triage advice when it finds a confident, citable match — otherwise the existing LLM/rule-based advice is left untouched. See `rag/corpus/README.md` for the corpus's current status (starter/public-knowledge, not yet clinically reviewed).
 - **Offline-first**: works without MongoDB (falls back to local JSON files) and caches data in the browser for offline login/patient/triage access.
 
 ## Structure
@@ -18,6 +19,7 @@ AI-powered voice triage assistant for ASHA/ANM health workers in rural India —
 frontend/   React 19 + Vite + Tailwind client
 backend/    Express 5 REST API (auth, patients, triage, voice, LLM)
 blockchain/ Solidity TriageAnchor contract + Hardhat deploy script
+rag/        Python FastAPI service: retrieval-grounded, cited triage advice (optional)
 ```
 
 ## Running locally
@@ -36,6 +38,21 @@ cd frontend && npm run dev
 ```
 
 The backend works with no API keys configured — MongoDB falls back to local JSON files, the LLM falls back to a rule-based clinical analyzer, and voice input falls back to the browser's built-in speech recognition. Add `SARVAM_API_KEY` and `OPENROUTER_API_KEY` in `backend/.env` for the full cloud-quality experience.
+
+### Optional: RAG service (grounded advice)
+
+```bash
+cd rag
+python -m venv venv && source venv/Scripts/activate   # or venv/bin/activate on macOS/Linux
+pip install -r requirements.txt
+cp .env.example .env                                    # reuses OPENROUTER_API_KEY
+python ingest.py                                        # builds the FAISS index from corpus/
+python eval.py                                           # proves grounded vs correctly-rejected queries
+uvicorn app:app --port 8001
+```
+
+Then set `RAG_SERVICE_URL=http://localhost:8001` in `backend/.env`. If this service isn't running,
+`/api/analyze-triage` just falls back to its existing advice — nothing else changes.
 
 ## Deployment
 
