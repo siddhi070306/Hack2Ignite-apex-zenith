@@ -19,7 +19,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/apex_z
 const USERS_FILE = path.join(__dirname, 'users.json');
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '15mb' })); // base64-encoded audio clips exceed Express's 100kb default
 
 let isMongoConnected = false;
 
