@@ -554,7 +554,8 @@ app.post('/api/triage', async (req, res) => {
   try {
     const {
       patientName, patientAge, patientGender, village, ashaName, urgency,
-      symptoms, keywords, advice, transcript, translation, language, coordinates
+      symptoms, keywords, advice, transcript, translation, language, coordinates,
+      txHash, blockNumber, dataHash
     } = req.body;
 
     if (!patientName || !ashaName || !urgency) {
@@ -566,7 +567,8 @@ app.post('/api/triage', async (req, res) => {
         patientName, patientAge, patientGender, village, ashaName, urgency,
         symptoms: symptoms || [], keywords: keywords || [], advice: advice || '',
         transcript: transcript || '', translation: translation || '', language: language || '',
-        coordinates: coordinates || null
+        coordinates: coordinates || null,
+        txHash: txHash || '', blockNumber: blockNumber || null, dataHash: dataHash || ''
       });
       await newTriage.save();
       const obj = newTriage.toObject();
@@ -580,6 +582,7 @@ app.post('/api/triage', async (req, res) => {
       symptoms: symptoms || [], keywords: keywords || [], advice: advice || '',
       transcript: transcript || '', translation: translation || '', language: language || '',
       coordinates: coordinates || null,
+      txHash: txHash || '', blockNumber: blockNumber || null, dataHash: dataHash || '',
       doctorVerificationStatus: 'pending',
       createdAt: new Date().toISOString()
     };
