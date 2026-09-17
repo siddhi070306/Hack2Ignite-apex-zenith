@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Mic, MicOff, AlertCircle, CheckCircle2, AlertTriangle, Languages, Clock, Volume2, Sparkles } from 'lucide-react';
+import { X, Mic, MicOff, AlertCircle, CheckCircle2, AlertTriangle, Languages, Clock, Volume2, VolumeX, Loader2, Sparkles } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { API_BASE_URL } from '../config';
 
@@ -77,6 +77,8 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   const [verificationStep, setVerificationStep] = useState(false);
   const [editableSymptoms, setEditableSymptoms] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [ttsState, setTtsState] = useState('idle'); // idle, loading, playing, error
+  const audioPlaybackRef = useRef(null);
 
   const timerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -337,6 +339,42 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     setTriageStep('completed');
   };
 
+  const handlePlayAdvice = async () => {
+    if (ttsState === 'loading') return;
+
+    if (ttsState === 'playing' && audioPlaybackRef.current) {
+      audioPlaybackRef.current.pause();
+      setTtsState('idle');
+      return;
+    }
+
+    setTtsState('loading');
+    try {
+      const selectedLangObj = INDIAN_LANGUAGES.find(l => l.code === selectedLanguage);
+      const res = await fetch(`${API_BASE_URL}/api/text-to-speech`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: advice,
+          languageCode: selectedLangObj ? selectedLangObj.sarvamCode : 'en-IN'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.audioBase64) throw new Error(data.error || 'Speech synthesis failed');
+
+      const audio = new Audio(`data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`);
+      audioPlaybackRef.current = audio;
+      audio.onended = () => setTtsState('idle');
+      audio.onerror = () => setTtsState('error');
+      await audio.play();
+      setTtsState('playing');
+    } catch (err) {
+      console.warn('Text-to-speech unavailable:', err);
+      setTtsState('error');
+      setTimeout(() => setTtsState('idle'), 2500);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -579,7 +617,16 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
                   <h4 className="font-heading font-extrabold text-lg mt-1">
                     {urgency === 'Red' ? t('immediate_referral') : urgency === 'Yellow' ? t('anm_assessment') : t('home_care')}
                   </h4>
-                  <p className="text-sm mt-1 opacity-80">{advice}</p>
+                  <div className="flex items-start gap-2 mt-1">
+                    <p className="text-sm opacity-80 flex-grow">{advice}</p>
+                    <button
+                      onClick={handlePlayAdvice}
+                      title={t('listen_advice')}
+                      className="shrink-0 p-2 rounded-xl bg-white/60 hover:bg-white text-current border border-current/20 transition-colors"
+                    >
+                      {ttsState === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : ttsState === 'playing' ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

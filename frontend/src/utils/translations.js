@@ -99,6 +99,7 @@ export const translations = {
     cancel: 'Cancel',
     save_anchor: 'Save Triage Record',
     record_now: 'Record Now',
+    listen_advice: 'Listen to advice',
   },
   hi: {
     app_title: 'आशा साथी',
@@ -197,6 +198,7 @@ export const translations = {
     cancel: 'रद्द करें',
     save_anchor: 'ट्राइएज रिकॉर्ड सहेजें',
     record_now: 'अभी रिकॉर्ड करें',
+    listen_advice: 'सलाह सुनें',
   },
   mr: {
     app_title: 'आशा साथी',
@@ -295,5 +297,6 @@ export const translations = {
     cancel: 'रद्द करा',
     save_anchor: 'ट्रायेज रेकॉर्ड जतन करा',
     record_now: 'आता रेकॉर्ड करा',
+    listen_advice: 'सल्ला ऐका',
   },
 };
