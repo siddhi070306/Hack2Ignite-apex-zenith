@@ -85,6 +85,7 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
   const [editableSymptoms, setEditableSymptoms] = useState([]);
   const [saving, setSaving] = useState(false);
   const [ttsState, setTtsState] = useState('idle'); // idle, loading, playing, error
+  const [ttsAudioSrc, setTtsAudioSrc] = useState(null);
   const audioPlaybackRef = useRef(null);
 
   const [nearbyHospitals, setNearbyHospitals] = useState([]);
@@ -514,6 +515,32 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triageStep, urgency]);
 
+  // Prefetch the advice audio as soon as results land, so the "Listen" tap can call
+  // audio.play() synchronously (no awaited fetch in between) — mobile browsers (notably
+  // iOS Safari) reject play() once the user gesture that triggered the handler has
+  // already been "spent" on an earlier await.
+  useEffect(() => {
+    let active = true;
+    if (triageStep === 'completed' && advice) {
+      setTtsAudioSrc(null);
+      const selectedLangObj = INDIAN_LANGUAGES.find(l => l.code === selectedLanguage);
+      fetch(`${API_BASE_URL}/api/text-to-speech`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: advice, languageCode: selectedLangObj ? selectedLangObj.sarvamCode : 'en-IN' })
+      })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+          if (active && ok && data.audioBase64) {
+            setTtsAudioSrc(`data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`);
+          }
+        })
+        .catch(() => {}); // silent — handlePlayAdvice falls back to fetch-on-tap if this never lands
+    }
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triageStep, advice]);
+
   const handleLearnMore = async () => {
     if (educationExpanded) {
       setEducationExpanded(false);
@@ -561,7 +588,19 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
     }
   };
 
-  const handlePlayAdvice = async () => {
+  const playAudio = (src) => {
+    const audio = new Audio(src);
+    audioPlaybackRef.current = audio;
+    audio.onended = () => setTtsState('idle');
+    audio.onerror = () => setTtsState('error');
+    audio.play().then(() => setTtsState('playing')).catch(err => {
+      console.warn('Audio playback blocked:', err);
+      setTtsState('error');
+      setTimeout(() => setTtsState('idle'), 2500);
+    });
+  };
+
+  const handlePlayAdvice = () => {
     if (ttsState === 'loading') return;
 
     if (ttsState === 'playing' && audioPlaybackRef.current) {
@@ -570,31 +609,39 @@ export default function VoiceTriageModal({ isOpen, onClose, patient, onSaveTriag
       return;
     }
 
-    setTtsState('loading');
-    try {
-      const selectedLangObj = INDIAN_LANGUAGES.find(l => l.code === selectedLanguage);
-      const res = await fetch(`${API_BASE_URL}/api/text-to-speech`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: advice,
-          languageCode: selectedLangObj ? selectedLangObj.sarvamCode : 'en-IN'
-        })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.audioBase64) throw new Error(data.error || 'Speech synthesis failed');
-
-      const audio = new Audio(`data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`);
-      audioPlaybackRef.current = audio;
-      audio.onended = () => setTtsState('idle');
-      audio.onerror = () => setTtsState('error');
-      await audio.play();
-      setTtsState('playing');
-    } catch (err) {
-      console.warn('Text-to-speech unavailable:', err);
-      setTtsState('error');
-      setTimeout(() => setTtsState('idle'), 2500);
+    // Prefetched clip ready — play() runs synchronously inside this click handler,
+    // which mobile browsers require for autoplay to be allowed.
+    if (ttsAudioSrc) {
+      playAudio(ttsAudioSrc);
+      return;
     }
+
+    // Prefetch hadn't landed yet (slow network, or it failed) — fetch on tap.
+    // This path may still get blocked by mobile autoplay restrictions since it awaits
+    // a network round-trip before calling play(), but it's better than nothing.
+    setTtsState('loading');
+    (async () => {
+      try {
+        const selectedLangObj = INDIAN_LANGUAGES.find(l => l.code === selectedLanguage);
+        const res = await fetch(`${API_BASE_URL}/api/text-to-speech`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: advice,
+            languageCode: selectedLangObj ? selectedLangObj.sarvamCode : 'en-IN'
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.audioBase64) throw new Error(data.error || 'Speech synthesis failed');
+        const src = `data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`;
+        setTtsAudioSrc(src);
+        playAudio(src);
+      } catch (err) {
+        console.warn('Text-to-speech unavailable:', err);
+        setTtsState('error');
+        setTimeout(() => setTtsState('idle'), 2500);
+      }
+    })();
   };
 
   const handleStartAnchoring = async () => {
